@@ -187,7 +187,12 @@ int main()
 							outPacket << "name";
 							outPacket << 1;
 							outPacket << msg;
-							sendTo(player, outPacket);
+
+							for (int j = 0; j < players.size(); ++j) {
+								PlayerConnection& playerToMsg = players[i];
+								sendTo(playerToMsg, outPacket);
+							}
+							
 
 							break;
 							//case PacketType::Emoting:
