@@ -309,6 +309,14 @@ int main()
 						{
 							playerCount--;
 						}
+
+						if (player.getCurrentRoomId() != -1) {
+							GameRoom* room = GameRoomHandler::GetGameRoom(player.getCurrentRoomId());
+
+							room->RemovePlayer(player.getId());
+							GameRoomHandler::CleanupGameRoom();
+						}
+
 						// - Delete the player from players vector
 						players.erase(players.begin() + i);
 						// - remove socket from selector
