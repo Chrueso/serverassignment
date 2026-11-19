@@ -223,6 +223,14 @@ int main()
 							sf::Packet outPacket;
 							outPacket << PacketType::RoomJoined;
 							outPacket << roomId;
+
+							broadcast(outPacket);
+							break;
+						}
+						case PacketType::ClientLeaveRoom: {
+							break;
+						}
+						case PacketType::RoomJoinFailed: {
 							break;
 						}
 						}
