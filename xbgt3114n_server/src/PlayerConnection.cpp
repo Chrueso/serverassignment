@@ -32,3 +32,13 @@ bool PlayerConnection::isAuthenticated()
 {
 	return authenticated;
 }
+
+int PlayerConnection::getCurrentRoomId()
+{
+	return currentRoomId;
+}
+
+void PlayerConnection::setCurrentRoomId(int roomId)
+{
+	currentRoomId = roomId;
+}

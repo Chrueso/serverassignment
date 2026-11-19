@@ -18,6 +18,11 @@ public:
     unsigned int GetId() { return roomId; }
     std::string GetName() { return roomName; }
     int GetPlayerCount() { return playerList.size(); }
+    
+    // add
+    int GetMaxPlayers() { return maxPlayers; }
+    bool IsFull() { return (int)playerList.size() >= maxPlayers; }
+    bool inBattle = false; 
     // maybe a get player list?
 };
 

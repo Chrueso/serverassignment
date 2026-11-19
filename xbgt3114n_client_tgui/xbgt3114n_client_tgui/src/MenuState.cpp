@@ -101,6 +101,7 @@ void MenuState::handlePacket(sf::Packet& packet)
 		std::cout << "Server rejected" << std::endl;
 		break;
 	}
+	
 
 }
 

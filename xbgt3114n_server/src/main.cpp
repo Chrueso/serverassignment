@@ -45,6 +45,19 @@ void broadcast(sf::Packet& packet, int excludeId = -1)
 	}
 }
 
+sf::Packet makeRoomListPacket()
+{
+	const auto& rooms = GameRoomHandler::GetRooms();
+	sf::Packet packet;
+	packet << PacketType::RoomList << (int)rooms.size();
+	for (GameRoom* room : rooms)
+	{
+		packet << (int)room->GetId() << room->GetName() << room->GetPlayerCount()
+		 << room->GetMaxPlayers() << room->inBattle;
+	}
+	return packet;
+}
+
 int main()
 {
 	static sf::TcpListener listener;
@@ -197,9 +210,18 @@ int main()
 						break;
 						case PacketType::ClientCreateRoom: {
 
-							
+							// a player can only be in one room at a time
+							if (player.getCurrentRoomId() != -1)
+							{
+								sf::Packet fail;
+								fail << PacketType::RoomJoinFailed << std::string("You are already in a room");
+								sendTo(player, fail);
+								break;
+							}
+
 							GameRoom* room = GameRoomHandler::CreateGameRoom(player.getName());
 							room->AddPlayer(&player);
+							player.setCurrentRoomId((int)room->GetId());
 							std::cout << "Room created with name: " << room->GetName() << " Id: " << room->GetId() << " Players Count: " << room->GetPlayerCount() << std::endl;
 							
 							sf::Packet outPacket;
@@ -209,22 +231,59 @@ int main()
 							outPacket << player.getId();
 
 							broadcast(outPacket);
+								
+								sf::Packet joined;
+								joined << PacketType::RoomJoined << (int)room->GetId();
+								sendTo(player, joined);                 // the creator's client is waiting for this
+
+								sf::Packet list = makeRoomListPacket();
+								broadcast(list);                         // everyone's list updates
 							// might need a status check to see if this succeded but later ig
 							break;
 						}
 						break;
+						// case PacketType::ClientJoinRoom: 
+						// 	{
+						// 	int roomId;
+						// 	inPacket >> roomId;
+						//
+						// 	GameRoom* room = GameRoomHandler::GetGameRoom(roomId);
+						// 	room->AddPlayer(&player);
+						//
+						// 	sf::Packet outPacket;
+						// 	outPacket << PacketType::RoomJoined;
+						// 	outPacket << roomId;
+						// 	break;
+						// }
+						case PacketType::ClientRequestRoomList: 
+							{
+								sf::Packet p = makeRoomListPacket();
+								sendTo(player, p);
+								break;
+							}
+							
 						case PacketType::ClientJoinRoom: {
-							int roomId;
-							inPacket >> roomId;
+								int roomId;
+								inPacket >> roomId;
+								GameRoom* room = GameRoomHandler::GetGameRoom(roomId);
 
-							GameRoom* room = GameRoomHandler::GetGameRoom(roomId);
-							room->AddPlayer(&player);
+								sf::Packet reply;
+								if (player.getCurrentRoomId() != -1) reply << PacketType::RoomJoinFailed << std::string("You are already in a room");
+								else if (room == nullptr)     reply << PacketType::RoomJoinFailed << std::string("Room not found");
+								else if (room->IsFull()) reply << PacketType::RoomJoinFailed << std::string("Room is full");
+								else if (room->inBattle) reply << PacketType::RoomJoinFailed << std::string("Battle in progress");
+								else {
+									room->AddPlayer(&player);
+									player.setCurrentRoomId(roomId);
+									reply << PacketType::RoomJoined << roomId;
+								}
+								sendTo(player, reply);               
 
-							sf::Packet outPacket;
-							outPacket << PacketType::RoomJoined;
-							outPacket << roomId;
-							break;
+								sf::Packet list = makeRoomListPacket();
+								broadcast(list);
+								break;
 						}
+							
 						}
 
 						

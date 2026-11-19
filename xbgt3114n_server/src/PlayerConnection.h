@@ -13,9 +13,14 @@ public:
 	sf::TcpSocket* getSocket();
 	bool isAuthenticated();
 
+	// -1 = in the lobby 
+	int getCurrentRoomId();
+	void setCurrentRoomId(int roomId);
+
 private:
 	int id;
 	std::string name;
 	bool authenticated;
 	sf::TcpSocket* socket;
+	int currentRoomId = -1;
 };

@@ -67,6 +67,10 @@ void GameState::handlePacket(sf::Packet& packet)
         {
             int roomId;
             packet >> roomId;
+            inRoom = true;
+            createRoomBtn->setEnabled(false);
+            joinRoomBtn->setEnabled(false);
+            //m_next = StateMachine::build<RoomState>(m_machine, m_window, true);
             cht->addLine("[Server] You joined room " + std::to_string(roomId), tgui::Color::Blue);
 
             break;
@@ -78,6 +82,19 @@ void GameState::handlePacket(sf::Packet& packet)
             cht->addLine("[Server] Could not join: " + reason, tgui::Color::Red);
             createRoomBtn->setEnabled(true); // let them try again
             updateJoinButton();
+            break;
+        }
+    case PacketType::RoomCreated:
+        {
+            // lobby chat event only; the list itself updates from RoomList
+            int roomId, hostId;
+            std::string roomName;
+            packet >> roomId >> roomName >> hostId; // same order the server writes
+
+            if (hostId == NetworkLocator::get().getClientId())
+                cht->addLine("[Server] You created " + roomName, tgui::Color::Blue);
+            else
+                cht->addLine("[Server] " + roomName + " was created", tgui::Color::Blue);
             break;
         }
     }
@@ -119,6 +136,11 @@ void GameState::handleRoomList(sf::Packet& packet)
 
 void GameState::updateJoinButton()
 {
+    if (inRoom)
+    {
+        joinRoomBtn->setEnabled(false);
+        return;
+    }
     // enable join button depend on room status
     int selected = roomList->getSelectedItemIndex();
     bool allowedToJoin = selected >= 0 && selected < (int)rooms.size()

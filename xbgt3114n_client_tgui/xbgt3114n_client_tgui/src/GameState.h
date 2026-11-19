@@ -17,6 +17,7 @@ class GameState : public BaseState
     tgui::Button::Ptr joinRoomBtn;
     tgui::ListView::Ptr roomList;
     
+    bool inRoom;
     struct RoomInfo
     {
         int id;

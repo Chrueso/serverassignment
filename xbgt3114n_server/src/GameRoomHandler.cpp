@@ -21,4 +21,5 @@ GameRoom* GameRoomHandler::GetGameRoom(int roomId)
             return room;
         }
     }
+    return nullptr; 
 }
