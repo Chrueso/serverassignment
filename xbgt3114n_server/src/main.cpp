@@ -184,14 +184,11 @@ int main()
 
 							sf::Packet outPacket;
 							outPacket << PacketType::ChatMessage;
-							outPacket << "name";
-							outPacket << 1;
+							outPacket << player.getName();
+							outPacket << player.getId();
 							outPacket << msg;
 
-							for (int j = 0; j < players.size(); ++j) {
-								PlayerConnection& playerToMsg = players[i];
-								sendTo(playerToMsg, outPacket);
-							}
+							broadcast(outPacket, player.getId());
 							
 
 							break;
