@@ -3,12 +3,25 @@
 
 enum class PacketType : std::uint8_t
 {
-	ClientJoinRequest,
-	ServerJoinResponse,
-	ServerJoinRejected,
-	UserConnected,
-	UserDisconnected,
-	ChatMessage
+    ClientJoinRequest,
+    ServerJoinResponse,
+    ServerJoinRejected,
+    UserConnected,
+    UserDisconnected,
+    ChatMessage,
+
+    // Room
+    ClientCreateRoom,
+    RoomCreated,
+    RoomJoined,
+    ClientJoinRoom,
+    ClientLeaveRoom,
+    RoomEnded,
+    RoomJoinFailed,         
+
+    // Room display
+    ClientRequestRoomList,  
+    RoomList                //count, then per room: id, name, hostName, players, maxPlayers, inBattle
 };
 
 // Overload sf::Packet's << and >> so we can push or pull PacketType
