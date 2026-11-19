@@ -100,8 +100,6 @@ void MenuState::handlePacket(sf::Packet& packet)
 	case PacketType::ServerJoinRejected:
 		std::cout << "Server rejected" << std::endl;
 		break;
-
-
 	}
 
 }
