@@ -14,10 +14,9 @@ GameState::GameState(StateMachine& machine, sf::RenderWindow& window, bool repla
     createRoomBtn = gui.get<tgui::Button>("CreateRoomButton");
     joinRoomBtn = gui.get<tgui::Button>("JoinRoomButton");
     roomList = gui.get<tgui::ListView>("RoomList");
-    roomList->addColumn("Room", 140);
-    roomList->addColumn("Host", 80);
+    roomList->addColumn("Room", 200);
     roomList->addColumn("Players", 60);
-    roomList->addColumn("Status", 60);
+    roomList->addColumn("Status", 78);
 
     roomList->onItemSelect([this](int index) { updateJoinButton(); });
     roomList->onDoubleClick([this](int index) { onJoinRoomPress(); });
@@ -101,15 +100,15 @@ void GameState::handleRoomList(sf::Packet& packet)
     for (int i = 0; i < count; i++)
     {
         RoomInfo roomInfo;
-        std::string name, host;
-        packet >> roomInfo.id >> name >> host >> roomInfo.players >> roomInfo.maxPlayers >> roomInfo.inBattle;
+        std::string name;
+        packet >> roomInfo.id >> name >> roomInfo.players >> roomInfo.maxPlayers >> roomInfo.inBattle;
 
         std::string status = roomInfo.inBattle
                                  ? "In Battle"
                                  : (roomInfo.players >= roomInfo.maxPlayers ? "Full" : "Waiting");
         std::string players = std::to_string(roomInfo.players) + "/" + std::to_string(roomInfo.maxPlayers);
 
-        roomList->addItem({name, host, players, status}); // one cell per column
+        roomList->addItem({name, players, status}); // one cell per column
         rooms.push_back(roomInfo); // rooms[row] = details of that row
 
         if (roomInfo.id == selectedRoomId)

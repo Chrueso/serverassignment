@@ -21,7 +21,7 @@ enum class PacketType : std::uint8_t
 
     // Room display
     ClientRequestRoomList,  
-    RoomList                //count, then per room: id, name, hostName, players, maxPlayers, inBattle
+    RoomList                //count, Per room id: id, name, players, maxPlayers, inBattle
 };
 
 // Overload sf::Packet's << and >> so we can push or pull PacketType
