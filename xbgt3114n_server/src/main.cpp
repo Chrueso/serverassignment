@@ -177,6 +177,18 @@ int main()
 							// Minimally, packet needs to have
 							// std::string which is formatted <NAME>: <MSG>
 							// optionally, the plaer id as well
+							std::string msg;
+							// player name, player id
+							inPacket >> msg;
+							std::cout << msg;
+
+							sf::Packet outPacket;
+							outPacket << PacketType::ChatMessage;
+							outPacket << "name";
+							outPacket << 1;
+							outPacket << msg;
+							sendTo(player, outPacket);
+
 							break;
 							//case PacketType::Emoting:
 							//	minimally, packet needs to have emoteId and player id

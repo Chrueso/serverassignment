@@ -45,7 +45,7 @@ void GameState::sendMessage()
 	if (msg.length() > 0) {
 		sf::Packet outPacket;
 
-		outPacket << PacketType::ChatMessage<< msg;
+		outPacket << PacketType::ChatMessage << msg;
 		NetworkLocator::get().sendPacket(outPacket);
 		edt->setText("");
 	}
