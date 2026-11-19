@@ -3,13 +3,25 @@
 
 enum class PacketType : std::uint8_t
 {
-	ClientJoinRequest,
-	ServerJoinResponse,
-	UserConnected,
-	UserRejected,
-	UserDisconnected,
-	ChatMessage,
-	ServerJoinRejected
+    ClientJoinRequest,
+    ServerJoinResponse,
+    ServerJoinRejected,
+    UserConnected,
+    UserDisconnected,
+    ChatMessage,
+
+    // Room
+    ClientCreateRoom,
+    RoomCreated,
+    RoomJoined,
+    ClientJoinRoom,
+    ClientLeaveRoom,
+    RoomEnded,
+    RoomJoinFailed,
+
+    // Room display
+    ClientRequestRoomList,
+    RoomList                //count, Per room id: id, name, players, maxPlayers, inBattle
 };
 
 struct PacketHeader

@@ -20,11 +20,15 @@ void GameState::handlePacket(sf::Packet& packet)
 	case PacketType::UserConnected: {
 		std::string playerName;
 		packet >> playerName;
+		cht->addLine(playerName + " has connected", tgui::Color::Blue);
+		break;
+	}
+	case PacketType::UserDisconnected: {
+		std::string playerName;
+		packet >> playerName;
 		cht->addLine(playerName + " has disconnected", tgui::Color::Blue);
 		break;
 	}
-	case PacketType::UserDisconnected:
-		break;
 	case PacketType::ChatMessage: {
 		std::string playerName;
 		std::string msg;
@@ -32,7 +36,7 @@ void GameState::handlePacket(sf::Packet& packet)
 		packet >> playerName >> playerId >> msg;
 		int clientId = NetworkLocator::get().getClientId();
 
-		cht->addLine(playerName + ": " + msg, playerId== clientId? tgui::Color::Green : tgui::Color::Black);
+		cht->addLine(playerName + ": " + msg, playerId == clientId ? tgui::Color::Green : tgui::Color::Black);
 		break;
 	}
 	}

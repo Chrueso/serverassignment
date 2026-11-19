@@ -2,7 +2,7 @@
 #include <iostream>
 #include <vector>
 #include "PacketType.h"
-#include "PlayerConnection.h"
+#include "GameRoomHandler.h"
 
 static std::vector<PlayerConnection> players;
 
@@ -143,7 +143,7 @@ int main()
 
 								// send acception to the user
 								sf::Packet acceptPacket;
-								acceptPacket << PacketType::ServerJoinResponse;
+								acceptPacket << PacketType::ServerJoinResponse << player.getId();
 								sendTo(player, acceptPacket);
 
 								// broadcast connection to all other users
@@ -173,12 +173,11 @@ int main()
 							}
 						}
 						break;
-						case PacketType::ChatMessage:
+						case PacketType::ChatMessage: {
 							// Minimally, packet needs to have
 							// std::string which is formatted <NAME>: <MSG>
 							// optionally, the plaer id as well
 							std::string msg;
-							// player name, player id
 							inPacket >> msg;
 							std::cout << msg;
 
@@ -188,14 +187,47 @@ int main()
 							outPacket << player.getId();
 							outPacket << msg;
 
-							broadcast(outPacket, player.getId());
-							
-
+							broadcast(outPacket);
 							break;
+						}
 							//case PacketType::Emoting:
 							//	minimally, packet needs to have emoteId and player id
 							//	break;
+							// Lobby created
+						break;
+						case PacketType::ClientCreateRoom: {
+
+							
+							GameRoom* room = GameRoomHandler::CreateGameRoom(player.getName());
+							room->AddPlayer(&player);
+							std::cout << "Room created with name: " << room->GetName() << " Id: " << room->GetId() << " Players Count: " << room->GetPlayerCount() << std::endl;
+							
+							sf::Packet outPacket;
+							outPacket << PacketType::RoomCreated;
+							outPacket << room->GetId();
+							outPacket << room->GetName();
+							outPacket << player.getId();
+
+							broadcast(outPacket);
+							// might need a status check to see if this succeded but later ig
+							break;
 						}
+						break;
+						case PacketType::ClientJoinRoom: {
+							int roomId;
+							inPacket >> roomId;
+
+							GameRoom* room = GameRoomHandler::GetGameRoom(roomId);
+							room->AddPlayer(&player);
+
+							sf::Packet outPacket;
+							outPacket << PacketType::RoomJoined;
+							outPacket << roomId;
+							break;
+						}
+						}
+
+						
 					}
 
 					else if (status == sf::Socket::Status::Disconnected)
