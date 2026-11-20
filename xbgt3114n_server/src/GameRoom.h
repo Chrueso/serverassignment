@@ -14,7 +14,7 @@ public:
     GameRoom(unsigned int id, std::string roomName);
     void AddPlayer(PlayerConnection* player);
     void RemovePlayer(int playerId);
-    void StartGame();
+    bool StartGame();
     unsigned int GetId() { return roomId; }
     std::string GetName() { return roomName; }
     int GetPlayerCount() { return playerList.size(); }
@@ -23,6 +23,7 @@ public:
     int GetMaxPlayers() { return maxPlayers; }
     bool IsFull() { return (int)playerList.size() >= maxPlayers; }
     bool inBattle = false; 
-    // maybe a get player list?
+    
+    std::vector<PlayerConnection*> GetPlayerList() { return playerList; }
 };
 

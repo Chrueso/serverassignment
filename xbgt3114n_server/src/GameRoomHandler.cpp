@@ -40,3 +40,18 @@ void GameRoomHandler::CleanupGameRoom()
         }
     }
 }
+
+PlayerConnection* GameRoomHandler::GetOtherPlayer(int roomId, int excludeId)
+{
+    GameRoom* room = GetGameRoom(roomId);
+    if (!room) return nullptr;
+
+    for (auto player : room->GetPlayerList()) {
+        if (player->getId() == excludeId) continue;
+        return player;
+    }
+
+    return nullptr;
+}
+
+
