@@ -69,6 +69,7 @@ void MenuState::onLoginPress()
 	if (nm.connect(ip, pot)) {
 		std::cout << "Connected to server" << std::endl;
 		std::string name = nameBox->getText().toStdString();
+		nm.setPlayerName(name);
 		sf::Packet outPacket;
 
 		outPacket << PacketType::ClientJoinRequest << name << false;

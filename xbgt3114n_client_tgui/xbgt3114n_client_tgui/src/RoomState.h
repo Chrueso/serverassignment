@@ -6,26 +6,38 @@
 
 class RoomState : public BaseState
 {
-    tgui::Gui gui; 
+    tgui::Gui gui;
 
-    // widgets ([0] = card 1 on the left, [1] = card 2 on the right)
+    // [0] = me, [1] = other player
     tgui::Label::Ptr title, countdownLabel;
     tgui::Label::Ptr names[2], statuses[2], records[2], creatureNames[2];
     tgui::Picture::Ptr creaturePics[2], emotePics[2];
     tgui::Button::Ptr readyBtn, leaveBtn, sendBtn;
     tgui::Button::Ptr creatureBtns[3];
+    tgui::Button::Ptr emoteBtns[4];
     tgui::Tabs::Ptr chatTabs;
     tgui::ChatBox::Ptr roomChat, lobbyChat;
     tgui::EditBox::Ptr chatInput;
 
-    int slotPlayerId[2] = { -1, -1 };   // which player id is shown on each card
-    float emoteTimer[2] = { 0, 0 };     // seconds left for each emote bubble
-    float countdown = -1.0f;            // visual countdown, -1 = not counting
+    bool myReady = false;
+    int  myCreature = -1;
+    int  myWins = -1, myLosses = -1;
 
+    int  otherId = -1;
+    std::string otherName;
+    bool otherReady = false;
+    int  otherCreature = -1;
+    int  otherWins = 0, otherLosses = 0;
+
+    float emoteTimer[2] = { 0, 0 };
+
+    void refreshCards();
+    void clearOtherPlayer();
     void handleRoomUpdate(sf::Packet& packet);
+    void handleRoomList(sf::Packet& packet);
     void showEmote(int playerId, int emoteId);
     void onSendPress();
-    void sendSimple(PacketType type);   // send a packet with no fields
+    void sendRoomPacket(PacketType type);
 
 protected:
     void handlePacket(sf::Packet& packet) override;

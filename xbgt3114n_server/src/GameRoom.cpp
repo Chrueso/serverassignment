@@ -30,4 +30,5 @@ void GameRoom::RemovePlayer(int playerId)
 bool GameRoom::StartGame()
 {
     // something here
+    return false;
 }

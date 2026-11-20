@@ -25,7 +25,6 @@ GameState::GameState(StateMachine& machine, sf::RenderWindow& window, bool repla
     createRoomBtn->onPress(&GameState::onCreateRoomPress, this);
     joinRoomBtn->onPress(&GameState::onJoinRoomPress, this);
 
-    // Join stays disabled until a joinable room is selected (see updateJoinButton)
     joinRoomBtn->setEnabled(false);
 }
 
@@ -68,12 +67,8 @@ void GameState::handlePacket(sf::Packet& packet)
         {
             int roomId;
             packet >> roomId;
-            inRoom = true;
-            createRoomBtn->setEnabled(false);
-            joinRoomBtn->setEnabled(false);
+            NetworkLocator::get().setRoomId(roomId);
             m_next = StateMachine::build<RoomState>(m_machine, m_window, true);
-            cht->addLine("[Server] You joined room " + std::to_string(roomId), tgui::Color::Blue);
-
             break;
         }
     case PacketType::RoomJoinFailed:
@@ -81,16 +76,15 @@ void GameState::handlePacket(sf::Packet& packet)
             std::string reason;
             packet >> reason;
             cht->addLine("[Server] Could not join: " + reason, tgui::Color::Red);
-            createRoomBtn->setEnabled(true); // let them try again
+            createRoomBtn->setEnabled(true);
             updateJoinButton();
             break;
         }
     case PacketType::RoomCreated:
         {
-            // lobby chat event only; the list itself updates from RoomList
             int roomId, hostId;
             std::string roomName;
-            packet >> roomId >> roomName >> hostId; // same order the server writes
+            packet >> roomId >> roomName >> hostId;
 
             if (hostId == NetworkLocator::get().getClientId())
                 cht->addLine("[Server] You created " + roomName, tgui::Color::Blue);
@@ -126,8 +120,8 @@ void GameState::handleRoomList(sf::Packet& packet)
                                  : (roomInfo.players >= roomInfo.maxPlayers ? "Full" : "Waiting");
         std::string players = std::to_string(roomInfo.players) + "/" + std::to_string(roomInfo.maxPlayers);
 
-        roomList->addItem({name, players, status}); // one cell per column
-        rooms.push_back(roomInfo); // rooms[row] = details of that row
+        roomList->addItem({name, players, status});
+        rooms.push_back(roomInfo);
 
         if (roomInfo.id == selectedRoomId)
             roomList->setSelectedItem(rooms.size() - 1);
@@ -172,7 +166,7 @@ void GameState::onCreateRoomPress()
 void GameState::onJoinRoomPress()
 {
     int selected = roomList->getSelectedItemIndex();
-    if (selected < 0 || selected >= (int)rooms.size()) return; // nothing selected
+    if (selected < 0 || selected >= (int)rooms.size()) return;
 
     sf::Packet outPacket;
     outPacket << PacketType::ClientJoinRoom << rooms[selected].id;

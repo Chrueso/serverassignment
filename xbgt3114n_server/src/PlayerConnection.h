@@ -10,6 +10,17 @@ struct Pokemon {
 	Pokemon() : health(100), dmg(1), type(-1) {}
 };
 
+inline Pokemon GetCreatureStats(int type)
+{
+	switch (type)
+	{
+	case 0:  return Pokemon(100, 10, 0);
+	case 1:  return Pokemon(90, 20, 1);
+	case 2:  return Pokemon(110, 5, 2);
+	default: return Pokemon(); 
+	}
+}
+
 class PlayerConnection
 {
 public:
@@ -22,13 +33,13 @@ public:
 	sf::TcpSocket* getSocket();
 	bool isAuthenticated();
 
-	// -1 = in the lobby 
+	// -1 = in the lobby		
 	int getCurrentRoomId();
 	void setCurrentRoomId(int roomId);
 	bool GetReadyState() { return ready; }
 	void ToggleReadyState() { ready = !ready; }
-	Pokemon* GetPokemon() { return chosenPokemon; }
-	void SetPokemon(Pokemon* choicePokemon) { chosenPokemon = choicePokemon; }
+	int GetCreature() { return creatureId; }     
+	void SetCreature(int c) { creatureId = c; }
 	int GetWins() { return wins; }
 	void IncreaseWin() { wins++; }
 	int GetLosses() { return losses; }
@@ -41,7 +52,7 @@ private:
 	
 	int currentRoomId = -1;
 	bool ready = false;
-	Pokemon* chosenPokemon = {};
+	int creatureId = -1;
 	int wins = 0;
 	int losses = 0;
 };
