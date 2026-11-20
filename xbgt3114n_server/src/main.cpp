@@ -283,7 +283,130 @@ int main()
 								broadcast(list);
 								break;
 						}
+						case PacketType::ClientRequestRoomUpdate: {
+							int roomId;
+							inPacket >> roomId;
+							GameRoom* room = GameRoomHandler::GetGameRoom(roomId);
+							if (player.getCurrentRoomId() != room->GetId()) continue;
+							sf::Packet updatePacket;
+							PlayerConnection* otherPlr = GameRoomHandler::GetOtherPlayer(room->GetId(), player.getId());
+							if (!otherPlr) continue;
+							updatePacket << PacketType::RoomUpdate;
+							updatePacket << otherPlr->getId();
+							updatePacket << otherPlr->GetReadyState();
+							updatePacket << otherPlr->GetPokemon();
+							sendTo(player, updatePacket);
+							break;
+						}
+						case PacketType::ClientToggleReady: {
+							int roomId;
+							inPacket >> roomId;
+							GameRoom* room = GameRoomHandler::GetGameRoom(roomId);
+							if (player.getCurrentRoomId() != room->GetId()) continue;
+							player.ToggleReadyState();
 							
+							PlayerConnection* otherPlr = GameRoomHandler::GetOtherPlayer(room->GetId(), player.getId());
+							if (!otherPlr) continue;
+							sf::Packet updatePacket;
+							updatePacket << PacketType::RoomUpdate;
+							updatePacket << player.getId();
+							updatePacket << player.GetReadyState();
+							updatePacket << player.GetPokemon();
+							sendTo(*otherPlr, updatePacket);
+							sendTo(player, updatePacket);
+							if (room->StartGame()) {
+								sf::Packet startGamePacket;
+								startGamePacket << PacketType::GameStart;
+								
+							}
+
+							break;
+						}
+						case PacketType::ClientSetCreature: {
+							int creatureType;
+							int roomId;
+							inPacket >> roomId;
+							inPacket >> creatureType;
+							
+							GameRoom* room = GameRoomHandler::GetGameRoom(roomId);
+							if (player.getCurrentRoomId() != room->GetId()) continue;
+							Pokemon p;
+							switch (creatureType) {
+							case 0: {
+								p = { 100, 10, 0 };
+								break;
+							}
+							case 1: {
+								p = { 90, 20 , 1 };
+								break;
+							}
+							case 2: {
+								p = { 110, 5 , 2 };
+								break;
+							}
+							}
+							player.SetPokemon(&p);
+							PlayerConnection* otherPlr = GameRoomHandler::GetOtherPlayer(room->GetId(), player.getId());
+							if (!otherPlr) continue;
+							if (p.type == -1) {
+								continue;
+							}
+							else {
+								sf::Packet updatePacket;
+								updatePacket << PacketType::RoomUpdate;
+								updatePacket << player.getId();
+								updatePacket << player.GetReadyState();
+								updatePacket << player.GetPokemon();
+								sendTo(*otherPlr, updatePacket);
+								sendTo(player, updatePacket);
+							}
+
+							break;
+						}
+						case PacketType::RoomChat: {
+							int roomId;
+							std::string msg;
+							inPacket >> roomId;
+							inPacket >> msg;
+							std::cout << msg;
+							GameRoom* room = GameRoomHandler::GetGameRoom(roomId);
+							if (player.getCurrentRoomId() != room->GetId()) continue;
+							PlayerConnection* otherPlr = GameRoomHandler::GetOtherPlayer(room->GetId(), player.getId());
+							if (!otherPlr) continue;
+							sf::Packet outPacket;
+							outPacket << PacketType::RoomChat;
+							outPacket << player.getName();
+							outPacket << player.getId();
+							outPacket << msg;
+
+							sendTo(*otherPlr, outPacket);
+							sendTo(player, outPacket);
+							break;
+						}
+						case PacketType::RoomEmote: {
+							int roomId;
+							int emote;
+							inPacket >> roomId;
+							inPacket >> emote;
+							std::cout << emote << std::endl;
+							GameRoom* room = GameRoomHandler::GetGameRoom(roomId);
+							if (player.getCurrentRoomId() != room->GetId()) continue;
+							PlayerConnection* otherPlr = GameRoomHandler::GetOtherPlayer(room->GetId(), player.getId());
+							if (!otherPlr) continue;
+							sf::Packet outPacket;
+							outPacket << PacketType::RoomEmote;
+							outPacket << player.getName();
+							outPacket << player.getId();
+							outPacket << emote;
+
+							sendTo(*otherPlr, outPacket);
+							sendTo(player, outPacket);
+
+							break;
+						}
+						
+						
+
 						}
 
 						
@@ -312,8 +435,15 @@ int main()
 
 						if (player.getCurrentRoomId() != -1) {
 							GameRoom* room = GameRoomHandler::GetGameRoom(player.getCurrentRoomId());
-
+							PlayerConnection* otherPlr = GameRoomHandler::GetOtherPlayer(room->GetId(), player.getId());
+							if (otherPlr) {
+								sf::Packet outPacket;
+								outPacket << PacketType::RoomLeft;
+								outPacket << player.getId();
+								sendTo(*otherPlr, outPacket);
+							}
 							room->RemovePlayer(player.getId());
+							
 							GameRoomHandler::CleanupGameRoom();
 						}
 

@@ -21,7 +21,16 @@ enum class PacketType : std::uint8_t
 
     // Room display
     ClientRequestRoomList,
-    RoomList                //count, Per room id: id, name, players, maxPlayers, inBattle
+    RoomList,                //count, Per room id: id, name, players, maxPlayers, inBattle
+
+    ClientRequestRoomUpdate, // Client > Server : when joined
+    RoomUpdate,              // Server > Room: when theres snapshot updated
+    ClientToggleReady,       // Cleint > Server
+    ClientSetCreature,       // Client > Server : creatureID
+    RoomChat,                // Client > Server : msg | Server > room: name, id, msg
+    RoomEmote,               // Client > Server emoteId | Server> (room? client?): name, id, emote
+    RoomLeft,                // Server > CLient Maybe in chat? :"You have left room "name"" 
+    GameStart                // Server>Room    "countdown finished, go to battle"
 };
 
 struct PacketHeader
