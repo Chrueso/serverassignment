@@ -366,6 +366,10 @@ int main()
                                 if (otherPlr) sendTo(*otherPlr, updatePacket);
 
                                 // GameStart later when both ready
+                                if (room->StartGame()) {
+                                    sf::Packet startPacket;
+                                    startPacket << PacketType::GameStart;
+                                }
                                 break;
                             }
                         case PacketType::ClientSetCreature:
