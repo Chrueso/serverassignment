@@ -9,7 +9,8 @@ int main()
 	// assign to _network locator_
 	NetworkLocator::provide(&nm);
 
-	sf::RenderWindow window(sf::VideoMode({ 800, 600 }), "SFML TGUI");
+	// brief: 1024x768, non-resizable (Titlebar + Close, no Resize)
+	sf::RenderWindow window(sf::VideoMode({ 1024, 768 }), "SFML TGUI", sf::Style::Titlebar | sf::Style::Close);
 
 	// StateMachine and State classes are
 	// adapted from https://github.com/eXpl0it3r/SmallGameEngine/tree/master

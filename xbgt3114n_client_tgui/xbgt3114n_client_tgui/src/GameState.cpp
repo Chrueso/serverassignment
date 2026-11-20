@@ -1,5 +1,6 @@
 #include "GameState.h"
 #include "PacketType.h"
+#include "RoomState.h"
 
 GameState::GameState(StateMachine& machine, sf::RenderWindow& window, bool replace)
     : BaseState{machine, window, replace}, gui(window)
@@ -70,7 +71,7 @@ void GameState::handlePacket(sf::Packet& packet)
             inRoom = true;
             createRoomBtn->setEnabled(false);
             joinRoomBtn->setEnabled(false);
-            //m_next = StateMachine::build<RoomState>(m_machine, m_window, true);
+            m_next = StateMachine::build<RoomState>(m_machine, m_window, true);
             cht->addLine("[Server] You joined room " + std::to_string(roomId), tgui::Color::Blue);
 
             break;
@@ -136,11 +137,7 @@ void GameState::handleRoomList(sf::Packet& packet)
 
 void GameState::updateJoinButton()
 {
-    if (inRoom)
-    {
-        joinRoomBtn->setEnabled(false);
-        return;
-    }
+
     // enable join button depend on room status
     int selected = roomList->getSelectedItemIndex();
     bool allowedToJoin = selected >= 0 && selected < (int)rooms.size()
@@ -174,11 +171,11 @@ void GameState::onCreateRoomPress()
 
 void GameState::onJoinRoomPress()
 {
-    int sel = roomList->getSelectedItemIndex();
-    if (sel < 0 || sel >= (int)rooms.size()) return; // nothing selected
+    int selected = roomList->getSelectedItemIndex();
+    if (selected < 0 || selected >= (int)rooms.size()) return; // nothing selected
 
     sf::Packet outPacket;
-    outPacket << PacketType::ClientJoinRoom << rooms[sel].id;
+    outPacket << PacketType::ClientJoinRoom << rooms[selected].id;
     NetworkLocator::get().sendPacket(outPacket);
 
     joinRoomBtn->setEnabled(false);

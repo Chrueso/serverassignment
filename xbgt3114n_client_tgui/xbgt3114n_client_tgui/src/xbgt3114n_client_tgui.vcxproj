@@ -156,6 +156,7 @@ xcopy.exe /D /Y "$(SolutionDir)dll\$(Platform)\$(Configuration.ToLower())\*.*" "
     <ClCompile Include="NetworkLocator.cpp" />
     <ClCompile Include="NetworkManager.cpp" />
     <ClCompile Include="PacketType.cpp" />
+    <ClCompile Include="RoomState.cpp" />
     <ClCompile Include="State.cpp" />
     <ClCompile Include="StateMachine.cpp" />
   </ItemGroup>
@@ -166,6 +167,7 @@ xcopy.exe /D /Y "$(SolutionDir)dll\$(Platform)\$(Configuration.ToLower())\*.*" "
     <ClInclude Include="NetworkLocator.h" />
     <ClInclude Include="NetworkManager.h" />
     <ClInclude Include="PacketType.h" />
+    <ClInclude Include="RoomState.h" />
     <ClInclude Include="State.hpp" />
     <ClInclude Include="StateMachine.hpp" />
   </ItemGroup>
