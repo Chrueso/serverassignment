@@ -1,8 +1,7 @@
 ﻿#include "RoomState.h"
 #include "GameState.h"
-#include <algorithm>
-
-static const char* CREATURE_NAMES[3] = { "CreatureA", "CreatureB", "CreatureC" };
+#include "BattleState.h"
+#include "Creatures.h"
 
 static const tgui::Color COLOR_ME(0, 140, 0);
 static const tgui::Color COLOR_ROOM(30, 60, 160);
@@ -26,20 +25,11 @@ RoomState::RoomState(StateMachine& machine, sf::RenderWindow& window, bool repla
         records[i]       = gui.get<tgui::Label>(p + "Record");
         creatureNames[i] = gui.get<tgui::Label>(p + "CreatureName");
         creaturePics[i]  = gui.get<tgui::Picture>(p + "Creature");
-        creatureBoxPos[i]  = creaturePics[i]->getPosition();
-        creatureBoxSize[i] = creaturePics[i]->getSize();
         emotePics[i]     = gui.get<tgui::Picture>(p + "Emote");
     }
 
     for (int i = 0; i < 3; i++)
     {
-        try
-        {
-            creatureTex[i] = tgui::Texture("../assets/creatures/creature_" + std::to_string(i) + ".png");
-            creatureTexLoaded[i] = true;
-        }
-        catch (const tgui::Exception&) {}
-
         creatureBtns[i] = gui.get<tgui::Button>("Creature" + std::to_string(i));
         creatureBtns[i]->setText(CREATURE_NAMES[i]);
         creatureBtns[i]->onPress([this, i] {
@@ -162,8 +152,7 @@ void RoomState::handlePacket(sf::Packet& packet)
         break;
     }
     case PacketType::GameStart:
-        roomChat->addLine("[Server] Battle starting!", COLOR_EVENT);
-        // TODO: go to BattleState
+        m_next = StateMachine::build<BattleState>(m_machine, m_window, true);
         break;
     }
 }
@@ -227,17 +216,12 @@ void RoomState::clearOtherPlayer()
 
 static std::string creatureText(int c)
 {
-    return (c >= 0 && c < 3) ? CREATURE_NAMES[c] : "No creature yet";
+    return creatureName(c);
 }
 
 void RoomState::showCreature(int card, int creature)
 {
-    bool hasPic = creature >= 0 && creature < 3 && creatureTexLoaded[creature];
-    if (hasPic)
-    {
-        creaturePics[card]->getRenderer()->setTexture(creatureTex[creature]);
-    }
-    creaturePics[card]->setVisible(hasPic);
+    showCreaturePicture(creaturePics[card], creature);
 }
 
 void RoomState::refreshCards()
@@ -309,18 +293,8 @@ void RoomState::showEmote(int playerId, int emoteId)
              : (playerId == otherId ? 1 : -1);
     if (card == -1) return;
 
-    try
-    {
-        emotePics[card]->getRenderer()->setTexture(
-            tgui::Texture("../assets/emote/room_" + std::to_string(emoteId) + ".png"));
-    }
-    catch (const tgui::Exception&)
-    {
-        // no image yet
-        std::string who = card == 0 ? "You" : otherName;
-        roomChat->addLine(who + " sent emote " + std::to_string(emoteId + 1), COLOR_EVENT);
-        return;
-    }
+    emotePics[card]->getRenderer()->setTexture(
+        tgui::Texture("../assets/emote/room_" + std::to_string(emoteId) + ".png"));
     emotePics[card]->setVisible(true);
     emoteTimer[card] = 2.0f;
 }

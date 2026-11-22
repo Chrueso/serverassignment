@@ -150,6 +150,8 @@ xcopy.exe /D /Y "$(SolutionDir)dll\$(Platform)\$(Configuration.ToLower())\*.*" "
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="BaseState.cpp" />
+    <ClCompile Include="BattleState.cpp" />
+    <ClCompile Include="Creatures.cpp" />
     <ClCompile Include="GameState.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MenuState.cpp" />
@@ -162,6 +164,8 @@ xcopy.exe /D /Y "$(SolutionDir)dll\$(Platform)\$(Configuration.ToLower())\*.*" "
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BaseState.h" />
+    <ClInclude Include="BattleState.h" />
+    <ClInclude Include="Creatures.h" />
     <ClInclude Include="GameState.h" />
     <ClInclude Include="MenuState.h" />
     <ClInclude Include="NetworkLocator.h" />
