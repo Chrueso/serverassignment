@@ -25,20 +25,35 @@ Renderer.2 {
     TextureHover = None;
 }
 
+Label.LobbyTitle {
+    Position = (40, 16);
+    Size = (640, 48);
+    Text = Lobby;
+    TextSize = 28;
+    VerticalAlignment = Center;
+
+    Renderer {
+        BackgroundColor = transparent;
+        TextColor = #3C3C3C;
+        Borders = (0, 0, 0, 0);
+        TextureBackground = None;
+    }
+}
+
 Group.Group1 {
-    Position = (0, 384);
+    Position = (40, 504);
     Renderer = &1;
-    Size = (448, 216);
+    Size = (944, 248);
 
     ChatBox.ChatBox1 {
-        IgnoreMouseEvents = true;
+        IgnoreMouseEvents = false;
         LineLimit = 100;
         LinesStartFromTop = false;
         NewLinesBelowOthers = true;
         ScrollbarPolicy = Automatic;
-        Size = (448, 192);
+        Size = (944, 216);
         TextColor = black;
-        TextSize = 13;
+        TextSize = 14;
 
         Renderer {
             BackgroundColor = rgba(180, 180, 180, 215);
@@ -68,9 +83,10 @@ Group.Group1 {
     }
 
     EditBox.EditBox1 {
-        Position = (0, 192);
-        Size = (384, 24);
-        TextSize = 13;
+        DefaultText = "Type a message...";
+        Position = (0, 220);
+        Size = (856, 28);
+        TextSize = 14;
 
         Renderer {
             BackgroundColor = #F5F5F5;
@@ -96,33 +112,33 @@ Group.Group1 {
     }
 
     Button.Button1 {
-        Position = (384, 192);
+        Position = (864, 220);
         Renderer = &2;
-        Size = (64, 24);
+        Size = (80, 28);
         Text = Send;
-        TextSize = 13;
+        TextSize = 14;
     }
 }
 
 Group.Group2 {
     Renderer = &1;
-    Size = (750, 380);
+    Size = (1024, 496);
 
     Button.CreateRoomButton {
-        Position = (560, 20);
+        Position = (704, 80);
         Renderer = &2;
-        Size = (160, 56);
+        Size = (280, 64);
         Text = "Create Room";
-        TextSize = 13;
+        TextSize = 18;
     }
 
     Button.JoinRoomButton {
         Enabled = false;
-        Position = (560, 90);
+        Position = (704, 160);
         Renderer = &2;
-        Size = (160, 56);
+        Size = (280, 64);
         Text = "Join Room";
-        TextSize = 13;
+        TextSize = 18;
     }
 
     ListView.RoomList {
@@ -131,13 +147,13 @@ Group.Group2 {
         HeaderSeparatorHeight = 0;
         HeaderVisible = true;
         HorizontalScrollbarPolicy = Automatic;
-        ItemHeight = 19;
-        Position = (200, 20);
+        ItemHeight = 28;
+        Position = (40, 80);
         ResizableColumns = false;
         SeparatorWidth = 1;
         ShowVerticalGridLines = 1;
-        Size = (338, 343.684);
-        TextSize = 13;
+        Size = (640, 400);
+        TextSize = 16;
         VerticalScrollbarPolicy = Automatic;
 
         Renderer {

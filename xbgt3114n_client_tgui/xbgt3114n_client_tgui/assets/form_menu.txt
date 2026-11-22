@@ -47,7 +47,7 @@ Renderer.2 {
 }
 
 Panel.LoginPanel {
-    Position = (250, 50% - 150);
+    Position = (50% - 150, 50% - 137);
     Size = (300, 274);
 
     Renderer {

@@ -31,7 +31,12 @@ class RoomState : public BaseState
 
     float emoteTimer[2] = { 0, 0 };
 
+    tgui::Texture creatureTex[3];
+    bool creatureTexLoaded[3] = { false, false, false };
+    tgui::Vector2f creatureBoxPos[2], creatureBoxSize[2];
+
     void refreshCards();
+    void showCreature(int card, int creature);
     void clearOtherPlayer();
     void handleRoomUpdate(sf::Packet& packet);
     void handleRoomList(sf::Packet& packet);

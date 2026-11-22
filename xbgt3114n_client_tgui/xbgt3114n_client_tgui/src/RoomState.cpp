@@ -1,5 +1,6 @@
 ﻿#include "RoomState.h"
 #include "GameState.h"
+#include <algorithm>
 
 static const char* CREATURE_NAMES[3] = { "CreatureA", "CreatureB", "CreatureC" };
 
@@ -25,11 +26,20 @@ RoomState::RoomState(StateMachine& machine, sf::RenderWindow& window, bool repla
         records[i]       = gui.get<tgui::Label>(p + "Record");
         creatureNames[i] = gui.get<tgui::Label>(p + "CreatureName");
         creaturePics[i]  = gui.get<tgui::Picture>(p + "Creature");
-        emotePics[i]     = gui.get<tgui::Picture>(p + "Emoji");
+        creatureBoxPos[i]  = creaturePics[i]->getPosition();
+        creatureBoxSize[i] = creaturePics[i]->getSize();
+        emotePics[i]     = gui.get<tgui::Picture>(p + "Emote");
     }
 
     for (int i = 0; i < 3; i++)
     {
+        try
+        {
+            creatureTex[i] = tgui::Texture("../assets/creatures/creature_" + std::to_string(i) + ".png");
+            creatureTexLoaded[i] = true;
+        }
+        catch (const tgui::Exception&) {}
+
         creatureBtns[i] = gui.get<tgui::Button>("Creature" + std::to_string(i));
         creatureBtns[i]->setText(CREATURE_NAMES[i]);
         creatureBtns[i]->onPress([this, i] {
@@ -41,7 +51,7 @@ RoomState::RoomState(StateMachine& machine, sf::RenderWindow& window, bool repla
 
     for (int i = 0; i < 4; i++)
     {
-        emoteBtns[i] = gui.get<tgui::Button>("Emoji" + std::to_string(i));
+        emoteBtns[i] = gui.get<tgui::Button>("Emote" + std::to_string(i));
         emoteBtns[i]->onPress([this, i] {
             sf::Packet p;
             p << PacketType::RoomEmote << NetworkLocator::get().getRoomId() << i;
@@ -220,12 +230,23 @@ static std::string creatureText(int c)
     return (c >= 0 && c < 3) ? CREATURE_NAMES[c] : "No creature yet";
 }
 
+void RoomState::showCreature(int card, int creature)
+{
+    bool hasPic = creature >= 0 && creature < 3 && creatureTexLoaded[creature];
+    if (hasPic)
+    {
+        creaturePics[card]->getRenderer()->setTexture(creatureTex[creature]);
+    }
+    creaturePics[card]->setVisible(hasPic);
+}
+
 void RoomState::refreshCards()
 {
     names[0]->setText(NetworkLocator::get().getPlayerName() + " (You)");
     statuses[0]->setText(myReady ? "READY" : "NOT READY");
     statuses[0]->getRenderer()->setTextColor(myReady ? COLOR_ME : COLOR_NOT_READY);
     creatureNames[0]->setText(creatureText(myCreature));
+    showCreature(0, myCreature);
     records[0]->setText(myWins < 0 ? "W - / L -"
                         : "W " + std::to_string(myWins) + " / L " + std::to_string(myLosses));
 
@@ -235,6 +256,7 @@ void RoomState::refreshCards()
         statuses[1]->setText("");
         creatureNames[1]->setText("");
         records[1]->setText("");
+        showCreature(1, -1);
     }
     else
     {
@@ -242,14 +264,19 @@ void RoomState::refreshCards()
         statuses[1]->setText(otherReady ? "READY" : "NOT READY");
         statuses[1]->getRenderer()->setTextColor(otherReady ? COLOR_ME : COLOR_NOT_READY);
         creatureNames[1]->setText(creatureText(otherCreature));
+        showCreature(1, otherCreature);
         records[1]->setText("W " + std::to_string(otherWins) + " / L " + std::to_string(otherLosses));
     }
 
     readyBtn->setText(myReady ? "Cancel" : "Ready");
     readyBtn->setEnabled(myCreature != -1);
-    for (auto& b : creatureBtns) b->setEnabled(!myReady);
+    for (int i = 0; i < 3; i++)
+    {
+        creatureBtns[i]->setText(i == myCreature ? std::string(CREATURE_NAMES[i]) + " (chosen)"
+                                                 : std::string(CREATURE_NAMES[i]));
+        creatureBtns[i]->setEnabled(!myReady);
+    }
 
-    // server hangs on emote/room chat when alone, so keep them off for now
     bool alone = (otherId == -1);
     for (auto& b : emoteBtns) b->setEnabled(!alone);
 }
@@ -285,7 +312,7 @@ void RoomState::showEmote(int playerId, int emoteId)
     try
     {
         emotePics[card]->getRenderer()->setTexture(
-            tgui::Texture("../assets/emoji/room_" + std::to_string(emoteId) + ".png"));
+            tgui::Texture("../assets/emote/room_" + std::to_string(emoteId) + ".png"));
     }
     catch (const tgui::Exception&)
     {

@@ -147,9 +147,9 @@ Panel.P1Panel {
     }
 
     Picture.P1Creature {
-        Position = (40, 48);
+        Position = (100, 48);
         Renderer = &3;
-        Size = (300, 180);
+        Size = (180, 180);
     }
 
     Label.P1CreatureName {
@@ -201,9 +201,9 @@ Panel.P2Panel {
     }
 
     Picture.P2Creature {
-        Position = (40, 48);
+        Position = (100, 48);
         Renderer = &3;
-        Size = (300, 180);
+        Size = (180, 180);
     }
 
     Label.P2CreatureName {
@@ -238,14 +238,14 @@ Label.Vs {
     VerticalAlignment = Center;
 }
 
-Picture.P1Emoji {
+Picture.P1Emote {
     Position = (330, 130);
     Renderer = &3;
     Size = (80, 80);
     Visible = false;
 }
 
-Picture.P2Emoji {
+Picture.P2Emote {
     Position = (614, 130);
     Renderer = &3;
     Size = (80, 80);
@@ -382,7 +382,7 @@ Button.SendButton {
     TextSize = 13;
 }
 
-Label.EmojiTitle {
+Label.EmoteTitle {
     Position = (624, 520);
     Renderer = &1;
     ScrollbarPolicy = Automatic;
@@ -392,43 +392,39 @@ Label.EmojiTitle {
     VerticalAlignment = Center;
 }
 
-BitmapButton.Emoji0 {
-    Image = None;
+BitmapButton.Emote0 {
+    Image = "emote/room_0.png" Smooth;
     ImageScaling = 0.8;
     Position = (624, 548);
     Renderer = &6;
     Size = (84, 84);
-    Text = 1;
     TextSize = 13;
 }
 
-BitmapButton.Emoji1 {
-    Image = None;
+BitmapButton.Emote1 {
+    Image = "emote/room_1.png" Smooth;
     ImageScaling = 0.8;
     Position = (716, 548);
     Renderer = &6;
     Size = (84, 84);
-    Text = 2;
     TextSize = 13;
 }
 
-BitmapButton.Emoji2 {
-    Image = None;
+BitmapButton.Emote2 {
+    Image = "emote/room_2.png" Smooth;
     ImageScaling = 0.8;
     Position = (808, 548);
     Renderer = &6;
     Size = (84, 84);
-    Text = 3;
     TextSize = 13;
 }
 
-BitmapButton.Emoji3 {
-    Image = None;
+BitmapButton.Emote3 {
+    Image = "emote/room_3.png" Smooth;
     ImageScaling = 0.8;
     Position = (900, 548);
     Renderer = &6;
     Size = (84, 84);
-    Text = 4;
     TextSize = 13;
 }
 

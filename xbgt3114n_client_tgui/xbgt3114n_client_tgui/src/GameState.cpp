@@ -15,9 +15,9 @@ GameState::GameState(StateMachine& machine, sf::RenderWindow& window, bool repla
     createRoomBtn = gui.get<tgui::Button>("CreateRoomButton");
     joinRoomBtn = gui.get<tgui::Button>("JoinRoomButton");
     roomList = gui.get<tgui::ListView>("RoomList");
-    roomList->addColumn("Room", 200);
-    roomList->addColumn("Players", 60);
-    roomList->addColumn("Status", 78);
+    roomList->addColumn("Room", 400);
+    roomList->addColumn("Players", 110);
+    roomList->addColumn("Status", 116);
 
     roomList->onItemSelect([this](int index) { updateJoinButton(); });
     roomList->onDoubleClick([this](int index) { onJoinRoomPress(); });

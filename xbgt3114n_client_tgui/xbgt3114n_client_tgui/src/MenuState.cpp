@@ -16,10 +16,10 @@ MenuState::MenuState(StateMachine& machine, sf::RenderWindow& window, bool repla
 	ipBox4 = gui.get<tgui::EditBox>("IPBox4");
 	loginButton = gui.get<tgui::Button>("LoginButton");
 
-	ipBox1->setText("26");
-	ipBox2->setText("113");
-	ipBox3->setText("211");
-	ipBox4->setText("220");
+	ipBox1->setText("127");
+	ipBox2->setText("0");
+	ipBox3->setText("0");
+	ipBox4->setText("1");
 	portBox->setText("53000");
 
 	nameBox->onTextChange(&MenuState::onInputBoxChanged, this);
