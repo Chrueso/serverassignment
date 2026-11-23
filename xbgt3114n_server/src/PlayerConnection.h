@@ -26,7 +26,7 @@ struct Pokemon {
 	Pokemon() : maxHealth(100), dmg(1), type(-1) { health = maxHealth; }
 };
 
-Pokemon GetCreatureStats(int type)
+inline Pokemon GetCreatureStats(int type)
 {
 	switch (type)
 	{
@@ -35,6 +35,7 @@ Pokemon GetCreatureStats(int type)
 	case 2:  return Pokemon(110, 5, 2);
 	default: return Pokemon(); 
 	}
+	return {};
 }
 
 class PlayerConnection
@@ -58,7 +59,8 @@ public:
 	Pokemon* GetCreatureData() { return creature; }
 	void SetCreature(int c) { 
 		creatureId = c; 
-		creature = &GetCreatureStats(c);
+		Pokemon getPokemon = GetCreatureStats(c);
+		creature = &getPokemon;
 	}
 	int GetWins() { return wins; }
 	void IncreaseWin() { wins++; }
