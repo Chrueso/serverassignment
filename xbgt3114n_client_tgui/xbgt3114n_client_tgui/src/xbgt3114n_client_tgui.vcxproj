@@ -124,7 +124,7 @@
       <AdditionalDependencies>sfml-graphics-d.lib;sfml-window-d.lib;sfml-system-d.lib;sfml-network-d.lib;sfml-audio-d.lib;tgui-d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy.exe /D /Y /E "$(SolutionDir)assets\*.*" "$(TargetDir)..\assets\"
+      <Command>xcopy.exe /Y /E "$(SolutionDir)assets\*.*" "$(TargetDir)..\assets\"
 xcopy.exe /D /Y "$(SolutionDir)dll\$(Platform)\$(Configuration.ToLower())\*.*" "$(TargetDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -144,28 +144,34 @@ xcopy.exe /D /Y "$(SolutionDir)dll\$(Platform)\$(Configuration.ToLower())\*.*" "
       <AdditionalDependencies>sfml-graphics.lib;sfml-window.lib;sfml-system.lib;sfml-network.lib;sfml-audio.lib;tgui.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy.exe /D /Y /E "$(SolutionDir)assets\*.*" "$(TargetDir)..\assets\"
+      <Command>xcopy.exe /Y /E "$(SolutionDir)assets\*.*" "$(TargetDir)..\assets\"
 xcopy.exe /D /Y "$(SolutionDir)dll\$(Platform)\$(Configuration.ToLower())\*.*" "$(TargetDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="BaseState.cpp" />
+    <ClCompile Include="BattleState.cpp" />
+    <ClCompile Include="Creatures.cpp" />
     <ClCompile Include="GameState.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MenuState.cpp" />
     <ClCompile Include="NetworkLocator.cpp" />
     <ClCompile Include="NetworkManager.cpp" />
     <ClCompile Include="PacketType.cpp" />
+    <ClCompile Include="RoomState.cpp" />
     <ClCompile Include="State.cpp" />
     <ClCompile Include="StateMachine.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BaseState.h" />
+    <ClInclude Include="BattleState.h" />
+    <ClInclude Include="Creatures.h" />
     <ClInclude Include="GameState.h" />
     <ClInclude Include="MenuState.h" />
     <ClInclude Include="NetworkLocator.h" />
     <ClInclude Include="NetworkManager.h" />
     <ClInclude Include="PacketType.h" />
+    <ClInclude Include="RoomState.h" />
     <ClInclude Include="State.hpp" />
     <ClInclude Include="StateMachine.hpp" />
   </ItemGroup>

@@ -13,6 +13,8 @@ class NetworkManager
 private:
 	sf::TcpSocket socket;
 	int clientId = -1; // received from server when succesfully joined
+	int roomId = -1;
+	std::string playerName;
 
 	std::queue<sf::Packet> sendQueue;
 	// key is subscription id
@@ -29,6 +31,11 @@ public:
 
 	int getClientId();
 	void setClientId(int id);
+
+	int getRoomId() { return roomId; }
+	void setRoomId(int id) { roomId = id; }
+	const std::string& getPlayerName() { return playerName; }
+	void setPlayerName(const std::string& name) { playerName = name; }
 
 	void sendPacket(sf::Packet& p);
 

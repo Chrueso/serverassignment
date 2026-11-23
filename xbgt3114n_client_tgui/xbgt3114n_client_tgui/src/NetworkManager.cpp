@@ -43,9 +43,10 @@ void NetworkManager::update() {
 		// one of the packet is not successfully sent within one check
 	}
 	// process receiving data
-	sf::Packet inPacket;
-	if (socket.receive(inPacket) == sf::Socket::Status::Done) {
+	sf::Packet inPacket;	
+	while(socket.receive(inPacket) == sf::Socket::Status::Done) {
 		handlePacketInternal(inPacket);
+		inPacket.clear();
 	}
 
 }

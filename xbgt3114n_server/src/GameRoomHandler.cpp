@@ -1,5 +1,5 @@
 #include "GameRoomHandler.h"
-
+#include <iostream>
 std::vector<GameRoom*> GameRoomHandler::roomList = {};
 unsigned int GameRoomHandler::incrementalId = 0;
 
@@ -21,4 +21,37 @@ GameRoom* GameRoomHandler::GetGameRoom(int roomId)
             return room;
         }
     }
+    return nullptr; 
 }
+
+void GameRoomHandler::CleanupGameRoom()
+{
+    auto it = roomList.begin();
+
+    for (it; it != roomList.end();) {
+        GameRoom* room = *it;
+
+        if (room->GetPlayerCount() == 0) {
+            it = roomList.erase(it);
+            std::cout << "ROOM DELETED" << std::endl;
+        }
+        else {
+            it++;
+        }
+    }
+}
+
+PlayerConnection* GameRoomHandler::GetOtherPlayer(int roomId, int excludeId)
+{
+    GameRoom* room = GetGameRoom(roomId);
+    if (!room) return nullptr;
+
+    for (auto player : room->GetPlayerList()) {
+        if (player->getId() == excludeId) continue;
+        return player;
+    }
+
+    return nullptr;
+}
+
+
