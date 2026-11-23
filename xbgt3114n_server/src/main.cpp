@@ -3,9 +3,10 @@
 #include <vector>
 #include "PacketType.h"
 #include "GameRoomHandler.h"
+#include <memory>
 
-static std::vector<PlayerConnection> players;
-
+//static std::vector<PlayerConnection> players;
+static std::vector<std::unique_ptr<PlayerConnection>> players;
 static int idIncrementor = 0;
 static int playerCount = 0;
 
@@ -35,12 +36,21 @@ void broadcast(sf::Packet& packet, int excludeId = -1)
     // if id matches exclude id, skip
     // otherwise, sendTo that player
 
+    /*
     for (PlayerConnection player : players)
     {
         if (!player.isAuthenticated()) continue;
 
         if (player.getId() == excludeId) continue;
 
+        sendTo(player, packet);
+    }
+    */
+    for (auto& p : players)
+    {
+        PlayerConnection& player = *p;
+        if (!player.isAuthenticated()) continue;
+        if (player.getId() == excludeId) continue;
         sendTo(player, packet);
     }
 }
@@ -53,7 +63,7 @@ sf::Packet makeRoomListPacket()
     for (GameRoom* room : rooms)
     {
         packet << (int)room->GetId() << room->GetName() << room->GetPlayerCount()
-            << room->GetMaxPlayers() << room->inBattle;
+            << room->GetMaxPlayers() << room->GetInBattle();
     }
     return packet;
 }
@@ -95,12 +105,14 @@ int main()
                     // - add to player list
 
                     // using emplace_back means we create PlayerConnection directly on the `players` address
-                    players.emplace_back(PlayerConnection(incomingSocket, idIncrementor));
+                    //players.emplace_back(PlayerConnection(incomingSocket, idIncrementor));
+                    players.push_back(std::make_unique<PlayerConnection>(incomingSocket, idIncrementor));
+                    
                     // create the entity like PlayerConnection conn and then players.push(conn) is copying the object.
 
                     // - add the socket to selector so we start accepting packets from that user.
-                    selector.add(*(players.back()).getSocket());
-
+                    //selector.add(*(players.back()).getSocket());
+                    selector.add(*players.back()->getSocket());
                     // - increment idIncrementor for next usage.
                     ++idIncrementor;
                 }
@@ -114,7 +126,8 @@ int main()
             //for(it = players.begin(); it != players.end();)
             for (int i = 0; i < players.size();)
             {
-                PlayerConnection& player = players[i];
+                //PlayerConnection& player = players[i];
+                PlayerConnection& player = *players[i];
                 sf::TcpSocket* sock = player.getSocket();
                 if (selector.isReady(*sock))
                 {
@@ -279,7 +292,7 @@ int main()
                                 "Room not found");
                             else if (room->IsFull()) reply << PacketType::RoomJoinFailed << std::string(
                                 "Room is full");
-                            else if (room->inBattle) reply << PacketType::RoomJoinFailed << std::string(
+                            else if (room->GetInBattle()) reply << PacketType::RoomJoinFailed << std::string(
                                 "Battle in progress");
                             else
                             {
@@ -366,10 +379,14 @@ int main()
 
                             // GameStart later when both ready
                             if (room->StartGame()) {
+                                if (room->GetPlayerCount() != 2) break;
                                 sf::Packet startPacket;
                                 startPacket << PacketType::GameStart;
+                                room->SetInBattle(true);
                                 sendTo(player, startPacket);
                                 sendTo(*otherPlr, startPacket);
+                                sf::Packet list = makeRoomListPacket();
+                                broadcast(list);
                             }
                             break;
                         }
@@ -463,15 +480,12 @@ int main()
                             outPacket1 << player.GetCreatureData().health;
                             outPacket1 << player.GetCreatureData().maxHealth;
                             
-                            
-                            outPacket1 << room->GetRound();
-                            outPacket1 << room->GetPlayerCount();
                             outPacket1 << otherPlr->getId();
                             outPacket1 << otherPlr->getName();
                             outPacket1 << otherPlr->GetCreature();
                             outPacket1 << otherPlr->GetCreatureData().health;
                             outPacket1 << otherPlr->GetCreatureData().maxHealth;
-                            //sendTo(*otherPlr, outPacket1);
+                            sendTo(*otherPlr, outPacket1);
                             sendTo(player, outPacket1);
                             break;
                         }
@@ -487,63 +501,92 @@ int main()
                             sf::Packet moveLockPacket;
                             moveLockPacket << PacketType::MoveLocked;
                             moveLockPacket << player.getId();
-                            //sendTo(*otherPlr, moveLockPacket);
+                            player.SetLocked(true);
+                            player.GetCreatureData().SetMoveType(moveType);
+                            sendTo(*otherPlr, moveLockPacket);
                             sendTo(player, moveLockPacket);
-                            int resultingDmg = 0;
-                            switch (moveType) {
-                            case 0: {
-                                // Attack
-                                resultingDmg = otherPlr->GetCreatureData().defend ? 0 : otherPlr->GetCreatureData().dmg;
-                                player.GetCreatureData().TakeDmg(resultingDmg);
-                                if (otherPlr->GetCreatureData().defend) {
-                                    otherPlr->GetCreatureData().ToggleDefend();
-                                }
-                                break;
-                            }
-                            case 1: {
-                                // Defend
-                                player.GetCreatureData().ToggleDefend();
-                                break;
-                            }
-                            case 2: {
-                                // break
-                                otherPlr->GetCreatureData().ToggleBreak();
-                                break;
-                            }
-                            default: {
-                                continue;
-                            }
-                            }
+                            
+                            if (!room->BothPlayersLocked()) break;
+                            
+                            int pMoveType = player.GetCreatureData().movetype;
+                            int otherPMoveType = otherPlr->GetCreatureData().movetype;
 
+                            Pokemon& creature1 = player.GetCreatureData();
+                            Pokemon& creature2 = otherPlr->GetCreatureData();
+
+                            // 0 - attack, 1 - defend, 2 - break
+                            int incDmg = 0;
+                            if (pMoveType == otherPMoveType) {
+                                creature1.TakeDmg(0);
+                                creature2.TakeDmg(0);
+                            }
+                            else if (pMoveType == 0) {
+                                if (otherPMoveType == 1) {
+                                    creature1.TakeDmg(creature2.dmg);
+                                    creature2.TakeDmg(0);
+                                }
+                                else if (otherPMoveType == 2) {
+                                    creature1.TakeDmg(0);
+                                    creature2.TakeDmg(creature1.dmg);
+                                }
+                            }
+                            else if (pMoveType == 1) {
+                                if (otherPMoveType == 0) {
+                                    creature1.TakeDmg(0);
+                                    creature2.TakeDmg(creature1.dmg);
+                                }
+                                else if (otherPMoveType == 2) {
+                                    creature1.TakeDmg(creature2.dmg);
+                                    creature2.TakeDmg(0);
+                                }
+                            }
+                            else if (pMoveType == 2) {
+                                if (otherPMoveType == 0) {
+                                    creature1.TakeDmg(creature2.dmg);
+                                    creature2.TakeDmg(0);
+                                }
+                                else if (otherPMoveType == 1) {
+                                    creature1.TakeDmg(0);
+                                    creature2.TakeDmg(creature1.dmg);
+                                }
+                            }
+                            
                             sf::Packet outPacket1;
                             outPacket1 << PacketType::RoundResult;
                             outPacket1 << room->GetRound();
-                            outPacket1 << 2;
+                            outPacket1 << room->GetPlayerCount();
                             outPacket1 << player.getId();
-                            outPacket1 << moveType;
-                            outPacket1 << resultingDmg;
+                            outPacket1 << player.GetCreatureData().movetype;
+                            outPacket1 << player.GetCreatureData().incDmg;
                             outPacket1 << player.GetCreatureData().health;
                             
-                            
-                            outPacket1 << room->GetRound();
-                            outPacket1 << 2;
                             outPacket1 << otherPlr->getId();
-                            outPacket1 << moveType;
-                            outPacket1 << resultingDmg;
+                            outPacket1 << otherPlr->GetCreatureData().movetype;
+                            outPacket1 << otherPlr->GetCreatureData().incDmg;
                             outPacket1 << otherPlr->GetCreatureData().health;
-                            //sendTo(*otherPlr, outPacket1);
+                            player.SetLocked(false);
+                            otherPlr->SetLocked(false);
+                            sendTo(*otherPlr, outPacket1);
                             sendTo(player, outPacket1);
                             room->IncrementRound();
                             if (otherPlr->GetCreatureData().health == 0 && player.GetCreatureData().health == 0) {
                                 sf::Packet gameEndPacket;
                                 gameEndPacket << PacketType::BattleEnd;
                                 gameEndPacket << -1;
+                                otherPlr->Reset();
+                                player.Reset();
+                                room->SetInBattle(false);
                                 sendTo(*otherPlr, gameEndPacket);
                                 sendTo(player, gameEndPacket);
                             } else if (player.GetCreatureData().health == 0) {
                                 sf::Packet gameEndPacket;
                                 gameEndPacket << PacketType::BattleEnd;
                                 gameEndPacket << otherPlr->getId();
+                                otherPlr->IncreaseWin();
+                                player.IncreaseLoss();
+                                otherPlr->Reset();
+                                player.Reset();
+                                room->SetInBattle(false);
                                 sendTo(*otherPlr, gameEndPacket);
                                 sendTo(player, gameEndPacket);
                             }
@@ -551,9 +594,16 @@ int main()
                                 sf::Packet gameEndPacket;
                                 gameEndPacket << PacketType::BattleEnd;
                                 gameEndPacket << player.getId();
+                                otherPlr->IncreaseLoss();
+                                player.IncreaseWin();
+                                otherPlr->Reset();
+                                player.Reset();
+                                room->SetInBattle(false);
                                 sendTo(*otherPlr, gameEndPacket);
                                 sendTo(player, gameEndPacket);
                             }
+                            sf::Packet list = makeRoomListPacket();
+                            broadcast(list);
                             break;
                         }
                         case PacketType::BattleEmote: {

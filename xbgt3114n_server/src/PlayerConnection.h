@@ -8,9 +8,12 @@ struct Pokemon {
 	int type;
 	bool broken = false;
 	bool defend = false;
+	int movetype = -1;
 
+	int incDmg = 0;
 	void TakeDmg(int dmg) {
 		health -= dmg;
+		incDmg = dmg;
 		if (health < 0) health = 0;
 	}
 
@@ -21,6 +24,11 @@ struct Pokemon {
 	void ToggleDefend() {
 		defend = !defend;
 	}
+
+	void SetMoveType(int type) {
+		movetype = type;
+	}
+
 
 	Pokemon(int hp, int d, int t) : maxHealth(hp), dmg(d), type(t) { health = maxHealth; }
 	Pokemon() : maxHealth(100), dmg(1), type(-1) { health = maxHealth; }
@@ -65,6 +73,15 @@ public:
 	void IncreaseWin() { wins++; }
 	int GetLosses() { return losses; }
 	void IncreaseLoss() { losses++; }
+	void SetLocked(bool lock) { locked = lock; }
+	bool GetLocked() { return locked; }
+
+	void Reset() {
+		creatureId = -1;
+		creature = {};
+		locked = false;
+		ready = false;
+	}
 private:
 	int id;
 	std::string name;
@@ -77,4 +94,6 @@ private:
 	int wins = 0;
 	int losses = 0;
 	Pokemon creature = {};
+	bool locked = false;
+
 };

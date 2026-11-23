@@ -45,3 +45,20 @@ bool GameRoom::StartGame()
 
     return canStart;
 }
+
+bool GameRoom::BothPlayersLocked()
+{
+    bool canStart = true;
+
+    auto it = playerList.begin();
+
+    for (it; it != playerList.end(); it++) {
+        PlayerConnection* player = *it;
+
+        if (player->GetLocked() == false) {
+            return false;
+        }
+    }
+
+    return canStart;
+}
