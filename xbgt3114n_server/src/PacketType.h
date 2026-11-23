@@ -19,10 +19,11 @@ enum class PacketType : std::uint8_t
     RoomEnded,
     RoomJoinFailed,
 
-    // Room display
+    // Lobby room display
     ClientRequestRoomList,
     RoomList,                //count, Per room id: id, name, players, maxPlayers, inBattle
 
+    // In room
     ClientRequestRoomUpdate, // Client > Server : when joined
     RoomUpdate,              // Server > Room: when theres snapshot updated
     ClientToggleReady,       // Cleint > Server
@@ -30,8 +31,11 @@ enum class PacketType : std::uint8_t
     RoomChat,                // Client > Server : msg | Server > room: name, id, msg
     RoomEmote,               // Client > Server emoteId | Server> (room? client?): name, id, emote
     RoomLeft,                // Server > CLient Maybe in chat? :"You have left room "name"" 
-    GameStart,                // Server>Room    "countdown finished, go to battle"
-     // Battle
+    GameStart,               // Server>Room    "countdown finished, go to battle"
+    CountdownStart,            // Server > Room: seconds
+    CountdownCancel,           // Server > Room
+
+    // Battle
     ClientRequestBattleUpdate, // Client > Server: roomId
     BattleUpdate,              // Server > Client: round, count, then per player: id, name, creature, hp, maxHp
     ClientChooseMove,          // Client > Server: roomId, move (0 Attack, 1 Defend, 2 Break)
