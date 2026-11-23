@@ -124,7 +124,7 @@
       <AdditionalDependencies>sfml-graphics-d.lib;sfml-window-d.lib;sfml-system-d.lib;sfml-network-d.lib;sfml-audio-d.lib;tgui-d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy.exe /D /Y /E "$(SolutionDir)assets\*.*" "$(TargetDir)..\assets\"
+      <Command>xcopy.exe /Y /E "$(SolutionDir)assets\*.*" "$(TargetDir)..\assets\"
 xcopy.exe /D /Y "$(SolutionDir)dll\$(Platform)\$(Configuration.ToLower())\*.*" "$(TargetDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -144,7 +144,7 @@ xcopy.exe /D /Y "$(SolutionDir)dll\$(Platform)\$(Configuration.ToLower())\*.*" "
       <AdditionalDependencies>sfml-graphics.lib;sfml-window.lib;sfml-system.lib;sfml-network.lib;sfml-audio.lib;tgui.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy.exe /D /Y /E "$(SolutionDir)assets\*.*" "$(TargetDir)..\assets\"
+      <Command>xcopy.exe /Y /E "$(SolutionDir)assets\*.*" "$(TargetDir)..\assets\"
 xcopy.exe /D /Y "$(SolutionDir)dll\$(Platform)\$(Configuration.ToLower())\*.*" "$(TargetDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
