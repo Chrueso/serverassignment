@@ -30,7 +30,15 @@ enum class PacketType : std::uint8_t
     RoomChat,                // Client > Server : msg | Server > room: name, id, msg
     RoomEmote,               // Client > Server emoteId | Server> (room? client?): name, id, emote
     RoomLeft,                // Server > CLient Maybe in chat? :"You have left room "name"" 
-    GameStart                // Server>Room    "countdown finished, go to battle"
+    GameStart,                // Server>Room    "countdown finished, go to battle"
+     // Battle
+    ClientRequestBattleUpdate, // Client > Server: roomId
+    BattleUpdate,              // Server > Client: round, count, then per player: id, name, creature, hp, maxHp
+    ClientChooseMove,          // Client > Server: roomId, move (0 Attack, 1 Defend, 2 Break)
+    MoveLocked,                // Server > Room: playerId
+    RoundResult,               // Server > Room: round, count, then per player: id, move, damageTaken, hp
+    BattleEnd,                 // Server > Room: winnerId (-1 = draw)
+    BattleEmote                // Client > Server: roomId, emoteId | Server > Room: name, id, emoteId
 };
 
 struct PacketHeader

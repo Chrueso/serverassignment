@@ -130,122 +130,122 @@ int main()
                         switch (type)
                         {
                         case PacketType::ClientJoinRequest:
+                        {
+                            // full format for ClientJoinRequest:
+                            // PacketType::ClientJoinRequest
+                            // std::string
+                            // bool
+
+                            // after user join, they need to send their id
+                            // process to either accept or reject
+                            std::string name;
+                            bool isAdmin;
+
+                            inPacket >> name >> isAdmin;
+                            bool allowed = isAdmin || playerCount < MAX_PLAYER_COUNT;
+                            if (allowed)
                             {
-                                // full format for ClientJoinRequest:
-                                // PacketType::ClientJoinRequest
-                                // std::string
-                                // bool
+                                // technically admin shouldn't take a slot.
+                                // but don't have method to check player is admin
+                                // if (isAdmin)
+                                playerCount++;
 
-                                // after user join, they need to send their id
-                                // process to either accept or reject
-                                std::string name;
-                                bool isAdmin;
+                                std::cout << sock->getRemoteAddress().value() << " sets name as "
+                                    << name << std::endl;
 
-                                inPacket >> name >> isAdmin;
-                                bool allowed = isAdmin || playerCount < MAX_PLAYER_COUNT;
-                                if (allowed)
-                                {
-                                    // technically admin shouldn't take a slot.
-                                    // but don't have method to check player is admin
-                                    // if (isAdmin)
-                                    playerCount++;
+                                player.setName(name); // Sideffect: also set authenticated to true
 
-                                    std::cout << sock->getRemoteAddress().value() << " sets name as "
-                                        << name << std::endl;
+                                // send acception to the user
+                                sf::Packet acceptPacket;
+                                acceptPacket << PacketType::ServerJoinResponse << player.getId();
+                                sendTo(player, acceptPacket);
 
-                                    player.setName(name); // Sideffect: also set authenticated to true
-
-                                    // send acception to the user
-                                    sf::Packet acceptPacket;
-                                    acceptPacket << PacketType::ServerJoinResponse << player.getId();
-                                    sendTo(player, acceptPacket);
-
-                                    // broadcast connection to all other users
-                                    sf::Packet broadcastPacket;
-                                    broadcastPacket << PacketType::UserConnected << name;
-                                    broadcast(broadcastPacket, player.getId());
-                                }
-                                else
-                                {
-                                    std::cout << sock->getRemoteAddress().value() << " rejected and disconnected" <<
-                                        std::endl;
-
-                                    // send rejection to the user.
-                                    sf::Packet outPacket;
-                                    outPacket << PacketType::ServerJoinRejected;
-                                    sendTo(player, outPacket);
-
-                                    // - Delete the player from players vector
-                                    // - remove socket from selector
-                                    // - delete socket
-                                    players.erase(players.begin() + i);
-                                    selector.remove(*sock);
-                                    delete sock;
-
-                                    // erasing the plyaer will shift the next player to this index
-                                    // so skip increment.
-                                    continue;
-                                }
+                                // broadcast connection to all other users
+                                sf::Packet broadcastPacket;
+                                broadcastPacket << PacketType::UserConnected << name;
+                                broadcast(broadcastPacket, player.getId());
                             }
-                            break;
+                            else
+                            {
+                                std::cout << sock->getRemoteAddress().value() << " rejected and disconnected" <<
+                                    std::endl;
+
+                                // send rejection to the user.
+                                sf::Packet outPacket;
+                                outPacket << PacketType::ServerJoinRejected;
+                                sendTo(player, outPacket);
+
+                                // - Delete the player from players vector
+                                // - remove socket from selector
+                                // - delete socket
+                                players.erase(players.begin() + i);
+                                selector.remove(*sock);
+                                delete sock;
+
+                                // erasing the plyaer will shift the next player to this index
+                                // so skip increment.
+                                continue;
+                            }
+                        }
+                        break;
                         case PacketType::ChatMessage:
-                            {
-                                // Minimally, packet needs to have
-                                // std::string which is formatted <NAME>: <MSG>
-                                // optionally, the plaer id as well
-                                std::string msg;
-                                inPacket >> msg;
-                                std::cout << msg;
+                        {
+                            // Minimally, packet needs to have
+                            // std::string which is formatted <NAME>: <MSG>
+                            // optionally, the plaer id as well
+                            std::string msg;
+                            inPacket >> msg;
+                            std::cout << msg;
 
-                                sf::Packet outPacket;
-                                outPacket << PacketType::ChatMessage;
-                                outPacket << player.getName();
-                                outPacket << player.getId();
-                                outPacket << msg;
+                            sf::Packet outPacket;
+                            outPacket << PacketType::ChatMessage;
+                            outPacket << player.getName();
+                            outPacket << player.getId();
+                            outPacket << msg;
 
-                                broadcast(outPacket);
-                                break;
-                            }
-                            //case PacketType::Emoting:
-                            //	minimally, packet needs to have emoteId and player id
-                            //	break;
-                            // Lobby created
+                            broadcast(outPacket);
                             break;
+                        }
+                        //case PacketType::Emoting:
+                        //	minimally, packet needs to have emoteId and player id
+                        //	break;
+                        // Lobby created
+                        break;
                         case PacketType::ClientCreateRoom:
+                        {
+                            // a player can only be in one room at a time
+                            if (player.getCurrentRoomId() != -1)
                             {
-                                // a player can only be in one room at a time
-                                if (player.getCurrentRoomId() != -1)
-                                {
-                                    sf::Packet fail;
-                                    fail << PacketType::RoomJoinFailed << std::string("You are already in a room");
-                                    sendTo(player, fail);
-                                    break;
-                                }
-
-                                GameRoom* room = GameRoomHandler::CreateGameRoom(player.getName());
-                                room->AddPlayer(&player);
-                                player.setCurrentRoomId((int)room->GetId());
-                                std::cout << "Room created with name: " << room->GetName() << " Id: " << room->GetId()
-                                    << " Players Count: " << room->GetPlayerCount() << std::endl;
-
-                                sf::Packet outPacket;
-                                outPacket << PacketType::RoomCreated;
-                                outPacket << room->GetId();
-                                outPacket << room->GetName();
-                                outPacket << player.getId();
-
-                                broadcast(outPacket);
-
-                                sf::Packet joined;
-                                joined << PacketType::RoomJoined << (int)room->GetId();
-                                sendTo(player, joined); // the creator's client is waiting for this
-
-                                sf::Packet list = makeRoomListPacket();
-                                broadcast(list); // everyone's list updates
-                                // might need a status check to see if this succeded but later ig
+                                sf::Packet fail;
+                                fail << PacketType::RoomJoinFailed << std::string("You are already in a room");
+                                sendTo(player, fail);
                                 break;
                             }
+
+                            GameRoom* room = GameRoomHandler::CreateGameRoom(player.getName());
+                            room->AddPlayer(&player);
+                            player.setCurrentRoomId((int)room->GetId());
+                            std::cout << "Room created with name: " << room->GetName() << " Id: " << room->GetId()
+                                << " Players Count: " << room->GetPlayerCount() << std::endl;
+
+                            sf::Packet outPacket;
+                            outPacket << PacketType::RoomCreated;
+                            outPacket << room->GetId();
+                            outPacket << room->GetName();
+                            outPacket << player.getId();
+
+                            broadcast(outPacket);
+
+                            sf::Packet joined;
+                            joined << PacketType::RoomJoined << (int)room->GetId();
+                            sendTo(player, joined); // the creator's client is waiting for this
+
+                            sf::Packet list = makeRoomListPacket();
+                            broadcast(list); // everyone's list updates
+                            // might need a status check to see if this succeded but later ig
                             break;
+                        }
+                        break;
                         // case PacketType::ClientJoinRoom: 
                         // 	{
                         // 	int roomId;
@@ -260,193 +260,312 @@ int main()
                         // 	break;
                         // }
                         case PacketType::ClientRequestRoomList:
-                            {
-                                sf::Packet p = makeRoomListPacket();
-                                sendTo(player, p);
-                                break;
-                            }
+                        {
+                            sf::Packet p = makeRoomListPacket();
+                            sendTo(player, p);
+                            break;
+                        }
 
                         case PacketType::ClientJoinRoom:
+                        {
+                            int roomId;
+                            inPacket >> roomId;
+                            GameRoom* room = GameRoomHandler::GetGameRoom(roomId);
+
+                            sf::Packet reply;
+                            if (player.getCurrentRoomId() != -1) reply << PacketType::RoomJoinFailed << std::string(
+                                "You are already in a room");
+                            else if (room == nullptr) reply << PacketType::RoomJoinFailed << std::string(
+                                "Room not found");
+                            else if (room->IsFull()) reply << PacketType::RoomJoinFailed << std::string(
+                                "Room is full");
+                            else if (room->inBattle) reply << PacketType::RoomJoinFailed << std::string(
+                                "Battle in progress");
+                            else
                             {
-                                int roomId;
-                                inPacket >> roomId;
-                                GameRoom* room = GameRoomHandler::GetGameRoom(roomId);
-
-                                sf::Packet reply;
-                                if (player.getCurrentRoomId() != -1) reply << PacketType::RoomJoinFailed << std::string(
-                                    "You are already in a room");
-                                else if (room == nullptr) reply << PacketType::RoomJoinFailed << std::string(
-                                    "Room not found");
-                                else if (room->IsFull()) reply << PacketType::RoomJoinFailed << std::string(
-                                    "Room is full");
-                                else if (room->inBattle) reply << PacketType::RoomJoinFailed << std::string(
-                                    "Battle in progress");
-                                else
-                                {
-                                    room->AddPlayer(&player);
-                                    player.setCurrentRoomId(roomId);
-                                    reply << PacketType::RoomJoined << roomId;
-                                }
-                                sendTo(player, reply);
-
-                                sf::Packet list = makeRoomListPacket();
-                                broadcast(list);
-                                break;
+                                room->AddPlayer(&player);
+                                player.setCurrentRoomId(roomId);
+                                reply << PacketType::RoomJoined << roomId;
                             }
-                            
+                            sendTo(player, reply);
+
+                            sf::Packet list = makeRoomListPacket();
+                            broadcast(list);
+                            break;
+                        }
+
                         case PacketType::ClientLeaveRoom:
-                            {
-                                int roomId;
-                                inPacket >> roomId;
-                                GameRoom* room = GameRoomHandler::GetGameRoom(roomId);
-                                if (!room || player.getCurrentRoomId() != (int)room->GetId()) break;
+                        {
+                            int roomId;
+                            inPacket >> roomId;
+                            GameRoom* room = GameRoomHandler::GetGameRoom(roomId);
+                            if (!room || player.getCurrentRoomId() != room->GetId()) break;
 
-                                PlayerConnection* otherPlr = GameRoomHandler::GetOtherPlayer(room->GetId(), player.getId());
+                            PlayerConnection* otherPlr = GameRoomHandler::GetOtherPlayer(room->GetId(), player.getId());
 
-                                sf::Packet leftPacket;
-                                leftPacket << PacketType::RoomLeft << player.getId();   // "this player left"
-                                sendTo(player, leftPacket);                             // the leaver goes back to the lobby
-                                if (otherPlr) sendTo(*otherPlr, leftPacket);            // the other player's card empties
+                            sf::Packet leftPacket;
+                            leftPacket << PacketType::RoomLeft << player.getId();   // "this player left"
+                            sendTo(player, leftPacket);                             // the leaver goes back to the lobby
+                            if (otherPlr) sendTo(*otherPlr, leftPacket);            // the other player's card empties
 
-                                room->RemovePlayer(player.getId());
-                                player.setCurrentRoomId(-1);
-                                if (player.GetReadyState()) player.ToggleReadyState();  // not ready next time
-                                player.SetCreature(-1);
-                                if (otherPlr && otherPlr->GetReadyState()) otherPlr->ToggleReadyState();  // unready
+                            room->RemovePlayer(player.getId());
+                            player.setCurrentRoomId(-1);
+                            if (player.GetReadyState()) player.ToggleReadyState();  // not ready next time
+                            player.SetCreature(-1);
+                            if (otherPlr && otherPlr->GetReadyState()) otherPlr->ToggleReadyState();  // unready
 
-                                GameRoomHandler::CleanupGameRoom();                     // deletes the room if its empty
-                                sf::Packet list = makeRoomListPacket();
-                                broadcast(list);                                        // lobby lists show 1/2 or remove the room
-                                break;
-                            }
+                            GameRoomHandler::CleanupGameRoom();                     // deletes the room if its empty
+                            sf::Packet list = makeRoomListPacket();
+                            broadcast(list);                                        // lobby lists show 1/2 or remove the room
+                            break;
+                        }
                         case PacketType::ClientRequestRoomUpdate:
-                            {
-                                int roomId;
-                                inPacket >> roomId;
-                                GameRoom* room = GameRoomHandler::GetGameRoom(roomId);
-                                if (!room || player.getCurrentRoomId() != (int)room->GetId()) break;
+                        {
+                            int roomId;
+                            inPacket >> roomId;
+                            GameRoom* room = GameRoomHandler::GetGameRoom(roomId);
+                            if (!room || player.getCurrentRoomId() != room->GetId()) break;
 
-                                PlayerConnection* otherPlr = GameRoomHandler::GetOtherPlayer(
-                                    room->GetId(), player.getId());
-                                if (!otherPlr) break;
+                            PlayerConnection* otherPlr = GameRoomHandler::GetOtherPlayer(room->GetId(), player.getId());
+                            if (!otherPlr) break;
 
-                                sf::Packet updatePacket;
-                                updatePacket << PacketType::RoomUpdate;
-                                updatePacket << otherPlr->getId();
-                                updatePacket << otherPlr->getName();
-                                updatePacket << otherPlr->GetReadyState();
-                                updatePacket << otherPlr->GetCreature();
-                                // NEW: an int (0-2, -1 = none) instead of the pointer
-                                updatePacket << otherPlr->GetWins();
-                                updatePacket << otherPlr->GetLosses();
-                                sendTo(player, updatePacket);
-                                break;
-                            }
+                            sf::Packet updatePacket;
+                            updatePacket << PacketType::RoomUpdate;
+                            updatePacket << otherPlr->getId();
+                            updatePacket << otherPlr->getName();
+                            updatePacket << otherPlr->GetReadyState();
+                            updatePacket << otherPlr->GetCreature();
+                            // NEW: an int (0-2, -1 = none) instead of the pointer
+                            updatePacket << otherPlr->GetWins();
+                            updatePacket << otherPlr->GetLosses();
+                            sendTo(player, updatePacket);
+                            break;
+                        }
                         case PacketType::ClientToggleReady:
-                            {
-                                int roomId;
-                                inPacket >> roomId;
-                                GameRoom* room = GameRoomHandler::GetGameRoom(roomId);
-                                if (!room || player.getCurrentRoomId() != (int)room->GetId()) break;
-                                if (player.GetCreature() == -1) break;
-                                player.ToggleReadyState();
+                        {
+                            int roomId;
+                            inPacket >> roomId;
+                            GameRoom* room = GameRoomHandler::GetGameRoom(roomId);
+                            if (!room || player.getCurrentRoomId() != room->GetId()) break;
+                            if (player.GetCreature() == -1) break;
+                            player.ToggleReadyState();
 
-                                sf::Packet updatePacket;
-                                updatePacket << PacketType::RoomUpdate;
-                                updatePacket << player.getId();
-                                updatePacket << player.getName();
-                                updatePacket << player.GetReadyState();
-                                updatePacket << player.GetCreature();
-                                updatePacket << player.GetWins();
-                                updatePacket << player.GetLosses();
-                                sendTo(player, updatePacket);
+                            sf::Packet updatePacket;
+                            updatePacket << PacketType::RoomUpdate;
+                            updatePacket << player.getId();
+                            updatePacket << player.getName();
+                            updatePacket << player.GetReadyState();
+                            updatePacket << player.GetCreature();
+                            updatePacket << player.GetWins();
+                            updatePacket << player.GetLosses();
+                            sendTo(player, updatePacket);
 
-                                PlayerConnection* otherPlr = GameRoomHandler::GetOtherPlayer(
-                                    room->GetId(), player.getId());
-                                if (otherPlr) sendTo(*otherPlr, updatePacket);
+                            PlayerConnection* otherPlr = GameRoomHandler::GetOtherPlayer(room->GetId(), player.getId());
+                            if (otherPlr) sendTo(*otherPlr, updatePacket);
 
-                                // GameStart later when both ready
-                                if (room->StartGame()) {
-                                    sf::Packet startPacket;
-                                    startPacket << PacketType::GameStart;
+                            // GameStart later when both ready
+                            if (room->StartGame()) {
+                                sf::Packet startPacket;
+                                startPacket << PacketType::GameStart;
+                            }
+                            break;
+                        }
+                        case PacketType::ClientSetCreature:
+                        {
+                            int creatureType;
+                            int roomId;
+                            inPacket >> roomId;
+                            inPacket >> creatureType;
+
+                            GameRoom* room = GameRoomHandler::GetGameRoom(roomId);
+                            if (!room || player.getCurrentRoomId() != room->GetId()) break;
+                            if (creatureType < 0 || creatureType > 2) break;
+                            if (player.GetReadyState()) break;
+
+                            player.SetCreature(creatureType);
+
+                            sf::Packet updatePacket;
+                            updatePacket << PacketType::RoomUpdate;
+                            updatePacket << player.getId();
+                            updatePacket << player.getName();
+                            updatePacket << player.GetReadyState();
+                            updatePacket << player.GetCreature();
+                            updatePacket << player.GetWins();
+                            updatePacket << player.GetLosses();
+                            sendTo(player, updatePacket);
+
+                            PlayerConnection* otherPlr = GameRoomHandler::GetOtherPlayer(room->GetId(), player.getId());
+                            if (otherPlr) sendTo(*otherPlr, updatePacket);
+                            break;
+
+                            break;
+                        }
+                        case PacketType::RoomChat:
+                        {
+                            int roomId;
+                            std::string msg;
+                            inPacket >> roomId;
+                            inPacket >> msg;
+                            std::cout << msg;
+                            GameRoom* room = GameRoomHandler::GetGameRoom(roomId);
+                            if (player.getCurrentRoomId() != room->GetId()) continue;
+                            PlayerConnection* otherPlr = GameRoomHandler::GetOtherPlayer(room->GetId(), player.getId());
+                            if (!otherPlr) continue;
+                            sf::Packet outPacket;
+                            outPacket << PacketType::RoomChat;
+                            outPacket << player.getName();
+                            outPacket << player.getId();
+                            outPacket << msg;
+
+                            sendTo(*otherPlr, outPacket);
+                            sendTo(player, outPacket);
+                            break;
+                        }
+                        case PacketType::RoomEmote:
+                        {
+                            int roomId;
+                            int emote;
+                            inPacket >> roomId;
+                            inPacket >> emote;
+                            std::cout << emote << std::endl;
+                            GameRoom* room = GameRoomHandler::GetGameRoom(roomId);
+                            if (player.getCurrentRoomId() != room->GetId()) continue;
+                            PlayerConnection* otherPlr = GameRoomHandler::GetOtherPlayer(room->GetId(), player.getId());
+                            if (!otherPlr) continue;
+                            sf::Packet outPacket;
+                            outPacket << PacketType::RoomEmote;
+                            outPacket << player.getName();
+                            outPacket << player.getId();
+                            outPacket << emote;
+
+                            sendTo(*otherPlr, outPacket);
+                            sendTo(player, outPacket);
+
+                            break;
+                        }
+                        case PacketType::ClientRequestBattleUpdate: {
+                            int roomId;
+                            inPacket >> roomId;
+                            GameRoom* room = GameRoomHandler::GetGameRoom(roomId);
+                            if (!room || player.getCurrentRoomId() != room->GetId()) break;
+                            PlayerConnection* otherPlr = GameRoomHandler::GetOtherPlayer(room->GetId(), player.getId());
+                            if (!otherPlr) continue;
+                            sf::Packet outPacket1;
+                            outPacket1 << PacketType::BattleUpdate;
+                            outPacket1 << player.getId();
+                            outPacket1 << player.getName();
+                            outPacket1 << player.GetCreature();
+                            outPacket1 << player.GetCreatureData()->health;
+                            outPacket1 << player.GetCreatureData()->maxHealth;
+                            sf::Packet outPacket2;
+                            outPacket2 << PacketType::BattleUpdate;
+                            outPacket2 << otherPlr->getId();
+                            outPacket2 << otherPlr->getName();
+                            outPacket2 << otherPlr->GetCreature();
+                            outPacket2 << otherPlr->GetCreatureData()->health;
+                            outPacket2 << otherPlr->GetCreatureData()->maxHealth;
+                            sendTo(*otherPlr, outPacket1);
+                            sendTo(player, outPacket2);
+                            break;
+                        }
+                        case PacketType::ClientChooseMove: {
+                            int roomId;
+                            int moveType;
+                            inPacket >> roomId;
+                            inPacket >> moveType;
+                            GameRoom* room = GameRoomHandler::GetGameRoom(roomId);
+                            if (!room || player.getCurrentRoomId() != room->GetId()) break;
+                            PlayerConnection* otherPlr = GameRoomHandler::GetOtherPlayer(room->GetId(), player.getId());
+                            if (!otherPlr) continue;
+                            sf::Packet moveLockPacket;
+                            moveLockPacket << PacketType::MoveLocked;
+                            moveLockPacket << player.getId();
+                            sendTo(*otherPlr, moveLockPacket);
+                            sendTo(player, moveLockPacket);
+                            int resultingDmg = 0;
+                            switch (moveType) {
+                            case 0: {
+                                // Attack
+                                resultingDmg = otherPlr->GetCreatureData()->defend ? 0 : otherPlr->GetCreatureData()->dmg;
+                                player.GetCreatureData()->TakeDmg(resultingDmg);
+                                if (otherPlr->GetCreatureData()->defend) {
+                                    otherPlr->GetCreatureData()->ToggleDefend();
                                 }
                                 break;
                             }
-                        case PacketType::ClientSetCreature:
-                            {
-                                int creatureType;
-                                int roomId;
-                                inPacket >> roomId;
-                                inPacket >> creatureType;
-
-                                GameRoom* room = GameRoomHandler::GetGameRoom(roomId);
-                                if (!room || player.getCurrentRoomId() != (int)room->GetId()) break;
-                                if (creatureType < 0 || creatureType > 2) break;
-                                if (player.GetReadyState()) break;
-                                
-                                player.SetCreature(creatureType);
-                                
-                                sf::Packet updatePacket;
-                                updatePacket << PacketType::RoomUpdate;
-                                updatePacket << player.getId();
-                                updatePacket << player.getName();
-                                updatePacket << player.GetReadyState();
-                                updatePacket << player.GetCreature();
-                                updatePacket << player.GetWins();
-                                updatePacket << player.GetLosses();
-                                sendTo(player, updatePacket);
-
-                                PlayerConnection* otherPlr = GameRoomHandler::GetOtherPlayer(room->GetId(), player.getId());
-                                if (otherPlr) sendTo(*otherPlr, updatePacket);
-                                break;
-
+                            case 1: {
+                                // Defend
+                                player.GetCreatureData()->ToggleDefend();
                                 break;
                             }
-                        case PacketType::RoomChat:
-                            {
-                                int roomId;
-                                std::string msg;
-                                inPacket >> roomId;
-                                inPacket >> msg;
-                                std::cout << msg;
-                                GameRoom* room = GameRoomHandler::GetGameRoom(roomId);
-                                if (player.getCurrentRoomId() != room->GetId()) continue;
-                                PlayerConnection* otherPlr = GameRoomHandler::GetOtherPlayer(
-                                    room->GetId(), player.getId());
-                                if (!otherPlr) continue;
-                                sf::Packet outPacket;
-                                outPacket << PacketType::RoomChat;
-                                outPacket << player.getName();
-                                outPacket << player.getId();
-                                outPacket << msg;
-
-                                sendTo(*otherPlr, outPacket);
-                                sendTo(player, outPacket);
+                            case 2: {
+                                // break
+                                otherPlr->GetCreatureData()->ToggleBreak();
                                 break;
                             }
-                        case PacketType::RoomEmote:
-                            {
-                                int roomId;
-                                int emote;
-                                inPacket >> roomId;
-                                inPacket >> emote;
-                                std::cout << emote << std::endl;
-                                GameRoom* room = GameRoomHandler::GetGameRoom(roomId);
-                                if (player.getCurrentRoomId() != room->GetId()) continue;
-                                PlayerConnection* otherPlr = GameRoomHandler::GetOtherPlayer(
-                                    room->GetId(), player.getId());
-                                if (!otherPlr) continue;
-                                sf::Packet outPacket;
-                                outPacket << PacketType::RoomEmote;
-                                outPacket << player.getName();
-                                outPacket << player.getId();
-                                outPacket << emote;
-
-                                sendTo(*otherPlr, outPacket);
-                                sendTo(player, outPacket);
-
-                                break;
+                            default: {
+                                continue;
                             }
+                            }
+
+                            sf::Packet outPacket1;
+                            outPacket1 << PacketType::RoundResult;
+                            outPacket1 << player.getId();
+                            outPacket1 << moveType;
+                            outPacket1 << resultingDmg;
+                            outPacket1 << player.GetCreatureData()->health;
+                            sf::Packet outPacket2;
+                            outPacket2 << PacketType::RoundResult;
+                            outPacket1 << otherPlr->getId();
+                            outPacket1 << moveType;
+                            outPacket1 << resultingDmg;
+                            outPacket1 << otherPlr->GetCreatureData()->health;
+                            sendTo(*otherPlr, outPacket1);
+                            sendTo(player, outPacket2);
+
+                            if (otherPlr->GetCreatureData()->health == 0 && player.GetCreatureData()->health == 0) {
+                                sf::Packet gameEndPacket;
+                                gameEndPacket << PacketType::BattleEnd;
+                                gameEndPacket << -1;
+                                sendTo(*otherPlr, gameEndPacket);
+                                sendTo(player, gameEndPacket);
+                            } else if (player.GetCreatureData()->health == 0) {
+                                sf::Packet gameEndPacket;
+                                gameEndPacket << PacketType::BattleEnd;
+                                gameEndPacket << otherPlr->getId();
+                                sendTo(*otherPlr, gameEndPacket);
+                                sendTo(player, gameEndPacket);
+
+                            }
+                            else if (otherPlr->GetCreatureData()->health == 0) {
+                                sf::Packet gameEndPacket;
+                                gameEndPacket << PacketType::BattleEnd;
+                                gameEndPacket << player.getId();
+                                sendTo(*otherPlr, gameEndPacket);
+                                sendTo(player, gameEndPacket);
+                            }
+                            break;
+                        }
+                        case PacketType::BattleEmote: {
+                            int roomId;
+                            int emote;
+                            inPacket >> roomId;
+                            inPacket >> emote;
+                            std::cout << emote << std::endl;
+                            GameRoom* room = GameRoomHandler::GetGameRoom(roomId);
+                            if (player.getCurrentRoomId() != room->GetId()) continue;
+                            PlayerConnection* otherPlr = GameRoomHandler::GetOtherPlayer(room->GetId(), player.getId());
+                            if (!otherPlr) continue;
+                            sf::Packet outPacket;
+                            outPacket << PacketType::BattleEmote;
+                            outPacket << player.getName();
+                            outPacket << player.getId();
+                            outPacket << emote;
+
+                            sendTo(*otherPlr, outPacket);
+                            sendTo(player, outPacket);
+                            break;
+                        }
                         }
                     }
 

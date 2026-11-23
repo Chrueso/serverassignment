@@ -10,6 +10,9 @@ protected:
     std::vector<PlayerConnection*> playerList;
     unsigned int roomId;
     std::string roomName;
+    int round;
+    int count;
+
 public:
     GameRoom(unsigned int id, std::string roomName);
     void AddPlayer(PlayerConnection* player);
@@ -19,11 +22,13 @@ public:
     std::string GetName() { return roomName; }
     int GetPlayerCount() { return playerList.size(); }
     
-    // add
+    
     int GetMaxPlayers() { return maxPlayers; }
     bool IsFull() { return (int)playerList.size() >= maxPlayers; }
     bool inBattle = false; 
     
     std::vector<PlayerConnection*> GetPlayerList() { return playerList; }
+
+
 };
 

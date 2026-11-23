@@ -3,14 +3,30 @@
 
 struct Pokemon {
 	int health;
+	int maxHealth;
 	int dmg;
 	int type;
+	bool broken = false;
+	bool defend = false;
 
-	Pokemon(int hp, int d, int t) : health(hp), dmg(d), type(t) {}
-	Pokemon() : health(100), dmg(1), type(-1) {}
+	void TakeDmg(int dmg) {
+		health -= dmg;
+		if (health < 0) health = 0;
+	}
+
+	void ToggleBreak() {
+		broken = !broken;
+	}
+
+	void ToggleDefend() {
+		defend = !defend;
+	}
+
+	Pokemon(int hp, int d, int t) : maxHealth(hp), dmg(d), type(t) { health = maxHealth; }
+	Pokemon() : maxHealth(100), dmg(1), type(-1) { health = maxHealth; }
 };
 
-inline Pokemon GetCreatureStats(int type)
+Pokemon GetCreatureStats(int type)
 {
 	switch (type)
 	{
@@ -39,7 +55,11 @@ public:
 	bool GetReadyState() { return ready; }
 	void ToggleReadyState() { ready = !ready; }
 	int GetCreature() { return creatureId; }     
-	void SetCreature(int c) { creatureId = c; }
+	Pokemon* GetCreatureData() { return creature; }
+	void SetCreature(int c) { 
+		creatureId = c; 
+		creature = &GetCreatureStats(c);
+	}
 	int GetWins() { return wins; }
 	void IncreaseWin() { wins++; }
 	int GetLosses() { return losses; }
@@ -55,4 +75,5 @@ private:
 	int creatureId = -1;
 	int wins = 0;
 	int losses = 0;
+	Pokemon* creature = {};
 };
