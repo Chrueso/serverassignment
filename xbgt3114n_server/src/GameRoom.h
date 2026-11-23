@@ -10,8 +10,7 @@ protected:
     std::vector<PlayerConnection*> playerList;
     unsigned int roomId;
     std::string roomName;
-    int round;
-    int count;
+    int round = 0;
 
 public:
     GameRoom(unsigned int id, std::string roomName);
@@ -29,6 +28,7 @@ public:
     
     std::vector<PlayerConnection*> GetPlayerList() { return playerList; }
 
-
+    int GetRound() { return round; }
+    void IncrementRound() { round++; }
 };
 

@@ -56,11 +56,10 @@ public:
 	bool GetReadyState() { return ready; }
 	void ToggleReadyState() { ready = !ready; }
 	int GetCreature() { return creatureId; }     
-	Pokemon* GetCreatureData() { return creature; }
-	void SetCreature(int c) { 
-		creatureId = c; 
-		Pokemon getPokemon = GetCreatureStats(c);
-		creature = &getPokemon;
+	Pokemon& GetCreatureData() { return creature; }
+	void SetCreature(int c) {
+		creatureId = c;
+		creature = GetCreatureStats(c);
 	}
 	int GetWins() { return wins; }
 	void IncreaseWin() { wins++; }
@@ -77,5 +76,5 @@ private:
 	int creatureId = -1;
 	int wins = 0;
 	int losses = 0;
-	Pokemon* creature = {};
+	Pokemon creature = {};
 };
