@@ -455,20 +455,24 @@ int main()
                             if (!otherPlr) continue;
                             sf::Packet outPacket1;
                             outPacket1 << PacketType::BattleUpdate;
+                            outPacket1 << room->GetRound();
+                            outPacket1 << room->GetPlayerCount();
                             outPacket1 << player.getId();
                             outPacket1 << player.getName();
                             outPacket1 << player.GetCreature();
-                            outPacket1 << player.GetCreatureData()->health;
-                            outPacket1 << player.GetCreatureData()->maxHealth;
-                            sf::Packet outPacket2;
-                            outPacket2 << PacketType::BattleUpdate;
-                            outPacket2 << otherPlr->getId();
-                            outPacket2 << otherPlr->getName();
-                            outPacket2 << otherPlr->GetCreature();
-                            outPacket2 << otherPlr->GetCreatureData()->health;
-                            outPacket2 << otherPlr->GetCreatureData()->maxHealth;
-                            sendTo(*otherPlr, outPacket1);
-                            sendTo(player, outPacket2);
+                            outPacket1 << player.GetCreatureData().health;
+                            outPacket1 << player.GetCreatureData().maxHealth;
+                            
+                            
+                            outPacket1 << room->GetRound();
+                            outPacket1 << room->GetPlayerCount();
+                            outPacket1 << otherPlr->getId();
+                            outPacket1 << otherPlr->getName();
+                            outPacket1 << otherPlr->GetCreature();
+                            outPacket1 << otherPlr->GetCreatureData().health;
+                            outPacket1 << otherPlr->GetCreatureData().maxHealth;
+                            //sendTo(*otherPlr, outPacket1);
+                            sendTo(player, outPacket1);
                             break;
                         }
                         case PacketType::ClientChooseMove: {
@@ -483,27 +487,27 @@ int main()
                             sf::Packet moveLockPacket;
                             moveLockPacket << PacketType::MoveLocked;
                             moveLockPacket << player.getId();
-                            sendTo(*otherPlr, moveLockPacket);
+                            //sendTo(*otherPlr, moveLockPacket);
                             sendTo(player, moveLockPacket);
                             int resultingDmg = 0;
                             switch (moveType) {
                             case 0: {
                                 // Attack
-                                resultingDmg = otherPlr->GetCreatureData()->defend ? 0 : otherPlr->GetCreatureData()->dmg;
-                                player.GetCreatureData()->TakeDmg(resultingDmg);
-                                if (otherPlr->GetCreatureData()->defend) {
-                                    otherPlr->GetCreatureData()->ToggleDefend();
+                                resultingDmg = otherPlr->GetCreatureData().defend ? 0 : otherPlr->GetCreatureData().dmg;
+                                player.GetCreatureData().TakeDmg(resultingDmg);
+                                if (otherPlr->GetCreatureData().defend) {
+                                    otherPlr->GetCreatureData().ToggleDefend();
                                 }
                                 break;
                             }
                             case 1: {
                                 // Defend
-                                player.GetCreatureData()->ToggleDefend();
+                                player.GetCreatureData().ToggleDefend();
                                 break;
                             }
                             case 2: {
                                 // break
-                                otherPlr->GetCreatureData()->ToggleBreak();
+                                otherPlr->GetCreatureData().ToggleBreak();
                                 break;
                             }
                             default: {
@@ -513,34 +517,37 @@ int main()
 
                             sf::Packet outPacket1;
                             outPacket1 << PacketType::RoundResult;
+                            outPacket1 << room->GetRound();
+                            outPacket1 << 2;
                             outPacket1 << player.getId();
                             outPacket1 << moveType;
                             outPacket1 << resultingDmg;
-                            outPacket1 << player.GetCreatureData()->health;
-                            sf::Packet outPacket2;
-                            outPacket2 << PacketType::RoundResult;
+                            outPacket1 << player.GetCreatureData().health;
+                            
+                            
+                            outPacket1 << room->GetRound();
+                            outPacket1 << 2;
                             outPacket1 << otherPlr->getId();
                             outPacket1 << moveType;
                             outPacket1 << resultingDmg;
-                            outPacket1 << otherPlr->GetCreatureData()->health;
-                            sendTo(*otherPlr, outPacket1);
-                            sendTo(player, outPacket2);
-
-                            if (otherPlr->GetCreatureData()->health == 0 && player.GetCreatureData()->health == 0) {
+                            outPacket1 << otherPlr->GetCreatureData().health;
+                            //sendTo(*otherPlr, outPacket1);
+                            sendTo(player, outPacket1);
+                            room->IncrementRound();
+                            if (otherPlr->GetCreatureData().health == 0 && player.GetCreatureData().health == 0) {
                                 sf::Packet gameEndPacket;
                                 gameEndPacket << PacketType::BattleEnd;
                                 gameEndPacket << -1;
                                 sendTo(*otherPlr, gameEndPacket);
                                 sendTo(player, gameEndPacket);
-                            } else if (player.GetCreatureData()->health == 0) {
+                            } else if (player.GetCreatureData().health == 0) {
                                 sf::Packet gameEndPacket;
                                 gameEndPacket << PacketType::BattleEnd;
                                 gameEndPacket << otherPlr->getId();
                                 sendTo(*otherPlr, gameEndPacket);
                                 sendTo(player, gameEndPacket);
-
                             }
-                            else if (otherPlr->GetCreatureData()->health == 0) {
+                            else if (otherPlr->GetCreatureData().health == 0) {
                                 sf::Packet gameEndPacket;
                                 gameEndPacket << PacketType::BattleEnd;
                                 gameEndPacket << player.getId();
