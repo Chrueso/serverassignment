@@ -285,6 +285,7 @@ int main()
                             {
                                 room->AddPlayer(&player);
                                 player.setCurrentRoomId(roomId);
+                                std::cout << "PLAYER JOINED: " << player.getName() << " ID: " << player.getId() << std::endl;
                                 reply << PacketType::RoomJoined << roomId;
                             }
                             sendTo(player, reply);
@@ -367,6 +368,8 @@ int main()
                             if (room->StartGame()) {
                                 sf::Packet startPacket;
                                 startPacket << PacketType::GameStart;
+                                sendTo(player, startPacket);
+                                sendTo(*otherPlr, startPacket);
                             }
                             break;
                         }
