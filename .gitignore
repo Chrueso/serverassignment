@@ -399,3 +399,8 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+# keep the SFML/TGUI runtime DLLs
+!**/dll/x64/
+!**/dll/x64/[Dd]ebug/
+!**/dll/x64/[Rr]elease/

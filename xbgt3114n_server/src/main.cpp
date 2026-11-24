@@ -705,9 +705,6 @@ int main()
                         continue;
                     }
                 }
-
-                
-
                 // Only increment when we are not removing any player.
                 i++;
             }
