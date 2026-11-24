@@ -1,6 +1,6 @@
 #pragma once
 #include "PlayerConnection.h"
-
+#include <chrono>
 class GameRoom
 {
 private:
@@ -12,11 +12,19 @@ protected:
     std::string roomName;
     int round = 0;
     bool inBattle = false;
+    std::chrono::steady_clock::time_point timer;
+    bool startTimer = false;
+    
 public:
     GameRoom(unsigned int id, std::string roomName);
     void AddPlayer(PlayerConnection* player);
     void RemovePlayer(int playerId);
     bool StartGame();
+
+    void UpdateTime();
+    void StartBattle();
+    void StartTimer();
+    void StopTimer();
     bool BothPlayersLocked();
     unsigned int GetId() { return roomId; }
     std::string GetName() { return roomName; }
@@ -34,5 +42,7 @@ public:
 
     void SetInBattle(bool inbattle) { inBattle = inbattle; }
     bool GetInBattle() { return inBattle; }
+    bool GetTimerStarted() { return startTimer; }
+    
 };
 

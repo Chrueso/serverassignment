@@ -46,6 +46,39 @@ bool GameRoom::StartGame()
     return canStart;
 }
 
+void GameRoom::UpdateTime()
+{
+    if (startTimer) {
+        std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
+        auto diff = (now - timer);
+        if (diff >= std::chrono::seconds(3)) {
+            StartBattle();
+        }
+    }
+}
+
+void GameRoom::StartBattle()
+{
+    inBattle = true;
+    startTimer = false;
+    std::cout << "STARTING BATTLE NOW" << std::endl;
+}
+
+void GameRoom::StartTimer()
+{
+    timer = std::chrono::steady_clock::now();
+    startTimer = true;
+    std::cout << "TIMER STARTED" << std::endl;
+    
+}
+
+void GameRoom::StopTimer()
+{
+    timer = std::chrono::steady_clock::now();
+    startTimer = false;
+    std::cout << "TIMER STOPPED" << std::endl;
+}
+
 bool GameRoom::BothPlayersLocked()
 {
     bool canStart = true;

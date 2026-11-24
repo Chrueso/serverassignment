@@ -5,6 +5,7 @@
 #include "GameRoomHandler.h"
 #include <memory>
 
+
 //static std::vector<PlayerConnection> players;
 static std::vector<std::unique_ptr<PlayerConnection>> players;
 static int idIncrementor = 0;
@@ -87,8 +88,27 @@ int main()
     bool isRunning = true;
     while (isRunning)
     {
-        if (selector.wait())
+        // loop through all rooms and if countdown is over start the game
+        auto rooms = GameRoomHandler::GetRoomList();
+        for (auto room : rooms) {
+            if (room->GetTimerStarted() && !room->GetInBattle()) {
+                room->UpdateTime();
+
+                if (room->GetInBattle()) {
+                    for (auto plr : room->GetPlayerList()) {
+                        sf::Packet startPacket;
+                        startPacket << PacketType::GameStart;
+                        sendTo(*plr, startPacket);
+
+                    }
+                }
+            }
+            sf::Packet list = makeRoomListPacket();
+            broadcast(list);
+        }
+        if (selector.wait(sf::milliseconds(10)))
         {
+            
             // Handle users connecting to server (us).
             if (selector.isReady(listener))
             {
@@ -378,15 +398,22 @@ int main()
                             if (otherPlr) sendTo(*otherPlr, updatePacket);
 
                             // GameStart later when both ready
+                            
                             if (room->StartGame()) {
                                 if (room->GetPlayerCount() != 2) break;
-                                sf::Packet startPacket;
-                                startPacket << PacketType::GameStart;
-                                room->SetInBattle(true);
-                                sendTo(player, startPacket);
-                                sendTo(*otherPlr, startPacket);
-                                sf::Packet list = makeRoomListPacket();
-                                broadcast(list);
+                                sf::Packet startCountdownPacket;
+                                startCountdownPacket << PacketType::CountdownStart;
+                                startCountdownPacket << 3;
+                                sendTo(player, startCountdownPacket);
+                                sendTo(*otherPlr, startCountdownPacket);
+                                room->StartTimer();
+                            }
+                            else {
+                                sf::Packet stopCountdownPacket;
+                                stopCountdownPacket << PacketType::CountdownCancel;
+                                sendTo(player, stopCountdownPacket);
+                                sendTo(*otherPlr, stopCountdownPacket);
+                                room->StopTimer();
                             }
                             break;
                         }
@@ -678,6 +705,9 @@ int main()
                         continue;
                     }
                 }
+
+                
+
                 // Only increment when we are not removing any player.
                 i++;
             }

@@ -12,6 +12,7 @@ public:
     static GameRoom* GetGameRoom(int roomId);
     static void CleanupGameRoom();
     static PlayerConnection* GetOtherPlayer(int roomId, int excludeId);
+    static std::vector<GameRoom*> GetRoomList() { return roomList; };
 
     static const std::vector<GameRoom*>& GetRooms() { return roomList; }
 };
